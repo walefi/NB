@@ -1,0 +1,18 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Fotos dos serviços
+    match /services/{allPaths=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Fotos de perfil (caso utilize futuramente)
+    match /profiles/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+  }
+}

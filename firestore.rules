@@ -9,9 +9,8 @@ service cloud.firestore {
       allow write: if request.auth != null;
     }
 
-    // Appointments: public can check availability, admin full access
+    // Appointments: create with valid fields, admin read/write
     match /appointments/{appointmentId} {
-      // Public can create with required fields
       allow create: if request.resource.data.keys().hasAll([
         'serviceId', 'serviceName', 'servicePrice', 'serviceDuration',
         'clientName', 'clientPhone', 'paymentMethod',
@@ -19,13 +18,7 @@ service cloud.firestore {
       ])
       && request.resource.data.status == 'pending';
 
-      // Public can read for availability (date, time, status only
-      // are needed by the booking flow). Client personal data
-      // is only exposed on the admin dashboard (auth required).
-      allow read: if true;
-
-      // Admin only: update and delete
-      allow update, delete: if request.auth != null;
+      allow read, update, delete: if request.auth != null;
     }
 
     // Settings: admin only
