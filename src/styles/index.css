@@ -1,0 +1,87 @@
+@import 'tailwindcss';
+
+@variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-rose: #be8f8f;
+  --color-rose-light: #d4afaf;
+  --color-rose-dark: #9b6b6b;
+  --color-rose-50: #f9f3f3;
+  --color-rose-100: #f0e3e3;
+  --color-rose-200: #e1c7c7;
+
+  --color-pink: #e8b4b8;
+  --color-pink-light: #f4d4d7;
+  --color-pink-dark: #d49098;
+  --color-pink-50: #fdf6f7;
+  --color-pink-100: #fae8ea;
+
+  --color-black: #111111;
+  --color-white: #fafafa;
+
+  --font-serif: 'Playfair Display', 'Cormorant Garamond', Georgia, serif;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-white text-black font-sans antialiased;
+    transition: background-color 0.4s ease, color 0.4s ease;
+  }
+
+  .dark body {
+    @apply bg-black text-white;
+  }
+
+  ::selection {
+    @apply bg-rose/20 dark:bg-rose-dark/30 text-black dark:text-white;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes check-draw {
+  from { stroke-dashoffset: 24; }
+  to { stroke-dashoffset: 0; }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.6s ease-out forwards;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.6s ease-out forwards;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.4s ease-out forwards;
+}
+
+.stagger-1 { animation-delay: 0.08s; opacity: 0; }
+.stagger-2 { animation-delay: 0.16s; opacity: 0; }
+.stagger-3 { animation-delay: 0.24s; opacity: 0; }
+.stagger-4 { animation-delay: 0.32s; opacity: 0; }
+.stagger-5 { animation-delay: 0.40s; opacity: 0; }

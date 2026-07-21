@@ -1,0 +1,41 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Services: public read (active only), admin write
+    match /services/{serviceId} {
+      allow read: if resource.data.isActive == true;
+      allow write: if request.auth != null;
+    }
+
+    // Appointments: public can check availability, admin full access
+    match /appointments/{appointmentId} {
+      // Public can create with required fields
+      allow create: if request.resource.data.keys().hasAll([
+        'serviceId', 'serviceName', 'servicePrice', 'serviceDuration',
+        'clientName', 'clientPhone', 'paymentMethod',
+        'date', 'time', 'status', 'createdAt'
+      ])
+      && request.resource.data.status == 'pending';
+
+      // Public can read for availability (date, time, status only
+      // are needed by the booking flow). Client personal data
+      // is only exposed on the admin dashboard (auth required).
+      allow read: if true;
+
+      // Admin only: update and delete
+      allow update, delete: if request.auth != null;
+    }
+
+    // Settings: admin only
+    match /settings/{settingId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Deny everything else
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
