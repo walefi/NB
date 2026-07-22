@@ -142,7 +142,7 @@ export async function createAppointment(
       clientPhone: data.clientPhone,
       date: data.date,
       time: data.time,
-    })
+    }).catch(() => {})
 
     return appointment
   }
@@ -177,7 +177,7 @@ export async function createAppointment(
       clientPhone: data.clientPhone,
       date: data.date,
       time: data.time,
-    })
+    }).catch(() => {})
 
     return { ...appointment, id: docRef.id }
   } catch (err) {
@@ -276,7 +276,7 @@ export async function updateAppointmentStatus(
           clientPhone: appointmentData.clientPhone,
           date: appointmentData.date,
           time: appointmentData.time,
-        })
+        }).catch(() => {})
       }
     }
     return
@@ -300,7 +300,7 @@ export async function updateAppointmentStatus(
         clientPhone: appointmentData.clientPhone,
         date: appointmentData.date,
         time: appointmentData.time,
-      })
+      }).catch(() => {})
     }
   } catch {
     const all = getLocalAppointments()

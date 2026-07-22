@@ -26,6 +26,16 @@ service cloud.firestore {
       allow read, write: if request.auth != null;
     }
 
+    // Notifications: admin read/write
+    match /notifications/{notificationId} {
+      allow create: if request.resource.data.keys().hasAll([
+        'type', 'title', 'message', 'appointmentId',
+        'clientName', 'clientPhone', 'date', 'time',
+        'createdAt', 'read'
+      ]);
+      allow read, update, delete: if request.auth != null;
+    }
+
     // Deny everything else
     match /{document=**} {
       allow read, write: if false;

@@ -11,6 +11,7 @@ import { RescheduleModal } from '@/components/admin/modals/RescheduleModal'
 import { EditModal } from '@/components/admin/modals/EditModal'
 import { useAppointmentsAdmin } from '@/hooks/admin/useAppointmentsAdmin'
 import { useNotifications } from '@/hooks/admin/useNotifications'
+import { updateAppointmentStatus } from '@/lib/firebase/appointments'
 import type { ThemeMode, Appointment, AppointmentStatus } from '@/types'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -50,8 +51,17 @@ export function AdminDashboard({ theme, onToggleTheme }: AdminDashboardProps) {
     navigate('/admin')
   }
 
-  const handleUpdateStatus = (_id: string, _status: AppointmentStatus) => {
-    // TODO: implement Firestore update
+  const handleUpdateStatus = async (id: string, status: AppointmentStatus) => {
+    const apt = appointments.find(a => a.id === id)
+    if (apt) {
+      await updateAppointmentStatus(id, status, {
+        clientName: apt.clientName,
+        clientPhone: apt.clientPhone,
+        serviceName: apt.serviceName,
+        date: apt.date,
+        time: apt.time,
+      })
+    }
   }
 
   const handleDelete = () => {
@@ -66,8 +76,17 @@ export function AdminDashboard({ theme, onToggleTheme }: AdminDashboardProps) {
     setDeleteConfirmOpen(false)
   }
 
-  const handleUpdate = (_id: string, _data: Partial<Appointment>) => {
-    // TODO: implement Firestore update
+  const handleUpdate = async (id: string, data: Partial<Appointment>) => {
+    const apt = appointments.find(a => a.id === id)
+    if (apt && data.status) {
+      await updateAppointmentStatus(id, data.status, {
+        clientName: apt.clientName,
+        clientPhone: apt.clientPhone,
+        serviceName: apt.serviceName,
+        date: data.date ?? apt.date,
+        time: data.time ?? apt.time,
+      })
+    }
   }
 
   return (
