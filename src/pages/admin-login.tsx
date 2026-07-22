@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Shield, ArrowLeft, Eye, EyeOff } from 'lucide-react'
+import { Shield, ArrowLeft, Eye, EyeOff, Mail, Lock } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
 import { Logo } from '@/components/shared/Logo'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
+import { useAuth } from '@/contexts/AuthContext'
 import type { ThemeMode } from '@/types'
 
 interface AdminLoginPageProps {
@@ -12,33 +12,52 @@ interface AdminLoginPageProps {
   onToggleTheme: () => void
 }
 
-const TEMP_CREDENTIALS = {
-  username: 'admin',
-  password: 'nb123456',
-}
-
 export function AdminLoginPage({ theme, onToggleTheme }: AdminLoginPageProps) {
   const navigate = useNavigate()
-  const [username, setUsername] = useState('')
+  const { login, resetPassword, currentUser } = useAuth()
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
+  const [resetMode, setResetMode] = useState(false)
 
-  const handleLogin = (e: React.FormEvent) => {
+  if (currentUser) {
+    navigate('/admin/dashboard', { replace: true })
+    return null
+  }
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    setSuccess('')
     setLoading(true)
 
-    setTimeout(() => {
-      if (username === TEMP_CREDENTIALS.username && password === TEMP_CREDENTIALS.password) {
-        localStorage.setItem('nb_admin_auth', 'true')
-        navigate('/admin/dashboard')
-      } else {
-        setError('Credenciais invalidas.')
-      }
+    try {
+      await login(email, password)
+      navigate('/admin/dashboard')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao fazer login.')
+    } finally {
       setLoading(false)
-    }, 500)
+    }
+  }
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    setSuccess('')
+    setLoading(true)
+
+    try {
+      await resetPassword(email)
+      setSuccess('Email de redefinicao enviado. Verifique sua caixa de entrada.')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao enviar email.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -67,53 +86,88 @@ export function AdminLoginPage({ theme, onToggleTheme }: AdminLoginPageProps) {
               </div>
               <div>
                 <h1 className="font-serif text-lg font-semibold text-black dark:text-white">
-                  Acesso Administrativo
+                  {resetMode ? 'Redefinir Senha' : 'Acesso Administrativo'}
                 </h1>
                 <p className="text-xs text-black/50 dark:text-white/50">
-                  Entre com suas credenciais
+                  {resetMode ? 'Informe seu email' : 'Entre com suas credenciais'}
                 </p>
               </div>
             </div>
 
-            <form onSubmit={handleLogin} className="space-y-4">
-              <Input
-                label="Usuario"
-                placeholder="admin"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                autoComplete="username"
-              />
-              <div className="relative">
-                <Input
-                  label="Senha"
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="Senha"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  autoComplete="current-password"
+            <form onSubmit={resetMode ? handleResetPassword : handleLogin} className="space-y-4">
+              <div>
+                <label className="flex items-center gap-2 text-sm font-medium text-black dark:text-white mb-1">
+                  <Mail className="w-4 h-4 text-rose" />
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl border border-rose-200 dark:border-rose-dark/30 bg-white dark:bg-gray-900 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-rose"
+                  placeholder="seu@email.com"
+                  autoComplete="email"
+                  required
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-[38px] text-rose/60 dark:text-rose-light/60 hover:text-rose dark:hover:text-rose-light transition-colors"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
               </div>
 
+              {!resetMode && (
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-medium text-black dark:text-white mb-1">
+                    <Lock className="w-4 h-4 text-rose" />
+                    Senha
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full px-4 py-2.5 pr-10 rounded-xl border border-rose-200 dark:border-rose-dark/30 bg-white dark:bg-gray-900 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-rose"
+                      placeholder="Sua senha"
+                      autoComplete="current-password"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-rose/60 dark:text-rose-light/60 hover:text-rose dark:hover:text-rose-light transition-colors"
+                      aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {error && (
-                <p className="text-sm text-pink-dark text-center">{error}</p>
+                <p className="text-sm text-red-500 dark:text-red-400 text-center">{error}</p>
+              )}
+
+              {success && (
+                <p className="text-sm text-green-600 dark:text-green-400 text-center">{success}</p>
               )}
 
               <Button type="submit" loading={loading} className="w-full">
-                Entrar
+                {resetMode ? 'Enviar Email' : 'Entrar'}
               </Button>
             </form>
 
-            <div className="mt-6 p-3 bg-rose-50 dark:bg-rose-dark/20 rounded-lg">
-              <p className="text-xs text-rose dark:text-rose-light text-center">
-                Credenciais temporarias: admin / nb123456
-              </p>
+            <div className="mt-4 text-center">
+              {resetMode ? (
+                <button
+                  onClick={() => { setResetMode(false); setError(''); setSuccess('') }}
+                  className="text-sm text-rose dark:text-rose-light hover:underline"
+                >
+                  Voltar ao login
+                </button>
+              ) : (
+                <button
+                  onClick={() => { setResetMode(true); setError(''); setSuccess('') }}
+                  className="text-sm text-rose dark:text-rose-light hover:underline"
+                >
+                  Esqueci minha senha
+                </button>
+              )}
             </div>
           </div>
         </div>

@@ -2,9 +2,9 @@ services:
   - type: web
     name: nb-nail-booking
     env: static
-    buildCommand: npm run build
+    buildCommand: npm install && npm run build
     staticPublishPath: dist
     routes:
       - type: rewrite
-        source: /**
+        source: /*
         destination: /index.html

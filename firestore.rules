@@ -9,7 +9,7 @@ service cloud.firestore {
       allow write: if request.auth != null;
     }
 
-    // Appointments: create with valid fields, admin read/write
+    // Appointments: create with valid fields (public booking), admin read/write
     match /appointments/{appointmentId} {
       allow create: if request.resource.data.keys().hasAll([
         'serviceId', 'serviceName', 'servicePrice', 'serviceDuration',
@@ -21,19 +21,15 @@ service cloud.firestore {
       allow read, update, delete: if request.auth != null;
     }
 
-    // Settings: admin read/write
+    // Settings: public read, admin write
     match /settings/{settingId} {
       allow read: if true;
       allow write: if request.auth != null;
     }
 
-    // Notifications: admin read/write
+    // Notifications: admin only
     match /notifications/{notificationId} {
-      allow create: if request.resource.data.keys().hasAll([
-        'type', 'title', 'message', 'appointmentId',
-        'clientName', 'clientPhone', 'date', 'time',
-        'createdAt', 'read'
-      ]);
+      allow create: if request.auth != null;
       allow read, update, delete: if request.auth != null;
     }
 

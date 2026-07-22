@@ -5,6 +5,7 @@ import { AdminSidebar } from '@/components/admin/layout/AdminSidebar'
 import { DesktopHeader } from '@/components/admin/layout/DesktopHeader'
 import { Button } from '@/components/ui/Button'
 import { useNotifications } from '@/hooks/admin/useNotifications'
+import { useAuth } from '@/contexts/AuthContext'
 import type { ThemeMode, NotificationType } from '@/types'
 
 interface AdminNotificationsProps {
@@ -54,6 +55,7 @@ function formatTimeAgo(dateStr: string): string {
 
 export function AdminNotifications({ theme, onToggleTheme }: AdminNotificationsProps) {
   const navigate = useNavigate()
+  const { logout } = useAuth()
   const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification } = useNotifications()
   const [typeFilter, setTypeFilter] = useState<NotificationType | 'all'>('all')
   const [readFilter, setReadFilter] = useState<'all' | 'read' | 'unread'>('all')
@@ -65,8 +67,8 @@ export function AdminNotifications({ theme, onToggleTheme }: AdminNotificationsP
     return true
   })
 
-  const handleLogout = () => {
-    localStorage.removeItem('nb_admin_auth')
+  const handleLogout = async () => {
+    await logout()
     navigate('/admin')
   }
 

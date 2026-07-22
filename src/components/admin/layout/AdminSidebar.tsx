@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Menu, X, Calendar as CalendarIcon, Home, BarChart3, LogOut, Bell, Settings } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
+import { useAuth } from '@/contexts/AuthContext'
 import type { ThemeMode } from '@/types'
 
 interface AdminSidebarProps {
@@ -12,9 +13,10 @@ interface AdminSidebarProps {
 export function AdminSidebar(_props: AdminSidebarProps) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const navigate = useNavigate()
+  const { logout } = useAuth()
 
-  const handleLogout = () => {
-    localStorage.removeItem('nb_admin_auth')
+  const handleLogout = async () => {
+    await logout()
     navigate('/admin')
   }
 

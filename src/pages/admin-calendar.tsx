@@ -6,6 +6,7 @@ import { DesktopHeader } from '@/components/admin/layout/DesktopHeader'
 import { CalendarHeader } from '@/components/admin/calendar/CalendarHeader'
 import { useCalendar } from '@/hooks/admin/useCalendar'
 import { moveAppointment, deleteAppointment, updateAppointmentStatus } from '@/lib/firebase/appointments'
+import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/Button'
 import type { ThemeMode, Appointment, AppointmentStatus } from '@/types'
 
@@ -35,6 +36,7 @@ interface AdminCalendarProps {
 
 export function AdminCalendar({ theme, onToggleTheme }: AdminCalendarProps) {
   const navigate = useNavigate()
+  const { logout } = useAuth()
   const {
     appointments,
     allAppointments,
@@ -61,10 +63,10 @@ export function AdminCalendar({ theme, onToggleTheme }: AdminCalendarProps) {
   const [rescheduleAppointment, setRescheduleAppointment] = useState<Appointment | null>(null)
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
 
-  const handleLogout = useCallback(() => {
-    localStorage.removeItem('nb_admin_auth')
+  const handleLogout = useCallback(async () => {
+    await logout()
     navigate('/admin')
-  }, [navigate])
+  }, [logout, navigate])
 
   const handleSelectAppointment = useCallback((apt: Appointment) => {
     setSelectedAppointment(apt)

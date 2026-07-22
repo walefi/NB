@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { AdminSidebar } from '@/components/admin/layout/AdminSidebar'
 import { AdminHeader } from '@/components/admin/layout/AdminHeader'
 import { useBusinessSettings } from '@/hooks/admin/useBusinessSettings'
+import { useAuth } from '@/contexts/AuthContext'
 import type { ThemeMode } from '@/types'
 
 const StudioInfoForm = lazy(() =>
@@ -55,11 +56,12 @@ export function AdminSettings({ theme, onToggleTheme }: AdminSettingsProps) {
   const [activeTab, setActiveTab] = useState<string>('info')
   const { settings, loading, saving, save } = useBusinessSettings()
   const navigate = useNavigate()
+  const { logout } = useAuth()
 
-  const handleLogout = useCallback(() => {
-    localStorage.removeItem('nb_admin_auth')
+  const handleLogout = useCallback(async () => {
+    await logout()
     navigate('/admin')
-  }, [navigate])
+  }, [logout, navigate])
 
   const renderContent = () => {
     if (!settings) return <p className="text-gray-400 text-center py-8">Nenhuma configuracao encontrada.</p>

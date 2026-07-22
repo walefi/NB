@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Bell } from 'lucide-react'
 import { AdminSidebar } from '@/components/admin/layout/AdminSidebar'
@@ -12,6 +12,7 @@ import { EditModal } from '@/components/admin/modals/EditModal'
 import { useAppointmentsAdmin } from '@/hooks/admin/useAppointmentsAdmin'
 import { useNotifications } from '@/hooks/admin/useNotifications'
 import { updateAppointmentStatus } from '@/lib/firebase/appointments'
+import { useAuth } from '@/contexts/AuthContext'
 import type { ThemeMode, Appointment, AppointmentStatus } from '@/types'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -23,6 +24,7 @@ interface AdminDashboardProps {
 
 export function AdminDashboard({ theme, onToggleTheme }: AdminDashboardProps) {
   const navigate = useNavigate()
+  const { logout } = useAuth()
   const [dateFilter, setDateFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState<AppointmentStatus | 'all'>('all')
   const [searchQuery, setSearchQuery] = useState('')
@@ -39,15 +41,8 @@ export function AdminDashboard({ theme, onToggleTheme }: AdminDashboardProps) {
 
   const { unreadCount, todayNotifications } = useNotifications()
 
-  useEffect(() => {
-    const authed = localStorage.getItem('nb_admin_auth') === 'true'
-    if (!authed) {
-      navigate('/admin')
-    }
-  }, [navigate])
-
-  const handleLogout = () => {
-    localStorage.removeItem('nb_admin_auth')
+  const handleLogout = async () => {
+    await logout()
     navigate('/admin')
   }
 
