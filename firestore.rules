@@ -33,6 +33,17 @@ service cloud.firestore {
       allow read, update, delete: if request.auth != null;
     }
 
+    // Notification logs: Cloud Functions + admin read
+    match /notification_logs/{logId} {
+      allow create: if request.auth != null;
+      allow read: if request.auth != null;
+    }
+
+    // Notification queue: Cloud Functions only
+    match /notification_queue/{jobId} {
+      allow read, write: if request.auth != null;
+    }
+
     // Deny everything else
     match /{document=**} {
       allow read, write: if false;
