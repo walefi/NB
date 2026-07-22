@@ -62,8 +62,6 @@ export function PublicBooking({ theme, onToggleTheme }: PublicBookingProps) {
     if (newStep < 7) {
       setStep(newStep)
     }
-    scrollToBooking()
-    scrollToTop()
   }, [])
 
   const nextStep = useCallback(() => {
@@ -87,8 +85,6 @@ export function PublicBooking({ theme, onToggleTheme }: PublicBookingProps) {
     if (step < 7) {
       setStep((step + 1) as BookingStep)
       setConfirmError(null)
-      scrollToBooking()
-      scrollToTop()
     }
   }, [step, selectedServiceId, selectedDate, selectedTime, clientName, clientPhone, paymentMethod])
 
@@ -96,8 +92,6 @@ export function PublicBooking({ theme, onToggleTheme }: PublicBookingProps) {
     if (step > 1 && step < 7) {
       setStep((step - 1) as BookingStep)
       setConfirmError(null)
-      scrollToBooking()
-      scrollToTop()
     }
   }, [step])
 

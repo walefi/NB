@@ -60,3 +60,27 @@ export interface ConfirmedData {
   clientPhone: string
   paymentMethod: PaymentMethod
 }
+
+export type NotificationType =
+  | 'new_appointment'
+  | 'confirmed'
+  | 'cancelled'
+  | 'rescheduled'
+  | 'completed'
+  | 'reminder_24h'
+  | 'reminder_2h'
+  | 'reminder_30min'
+
+export interface Notification {
+  id: string
+  type: NotificationType
+  title: string
+  message: string
+  appointmentId: string
+  clientName: string
+  clientPhone: string
+  date: string
+  time: string
+  createdAt: string
+  read: boolean
+}

@@ -1,49 +1,44 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { signInWithEmailAndPassword } from 'firebase/auth'
 import { Shield, ArrowLeft, Eye, EyeOff } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Logo } from '@/components/shared/Logo'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
-import { auth, firebaseReady, initError } from '@/lib/firebase/config'
 import type { ThemeMode } from '@/types'
 
-interface AdminLoginProps {
+interface AdminLoginPageProps {
   theme: ThemeMode
   onToggleTheme: () => void
 }
 
-export function AdminLogin({ theme, onToggleTheme }: AdminLoginProps) {
+const TEMP_CREDENTIALS = {
+  username: 'admin',
+  password: 'nb123456',
+}
+
+export function AdminLoginPage({ theme, onToggleTheme }: AdminLoginPageProps) {
   const navigate = useNavigate()
-  const [email, setEmail] = useState('')
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     setLoading(true)
 
-    if (!firebaseReady || !auth) {
-      setTimeout(() => {
+    setTimeout(() => {
+      if (username === TEMP_CREDENTIALS.username && password === TEMP_CREDENTIALS.password) {
         localStorage.setItem('nb_admin_auth', 'true')
         navigate('/admin/dashboard')
-      }, 500)
-      return
-    }
-
-    try {
-      await signInWithEmailAndPassword(auth, email, password)
-      localStorage.setItem('nb_admin_auth', 'true')
-      navigate('/admin/dashboard')
-    } catch {
-      setError('Email ou senha inválidos.')
-    } finally {
+      } else {
+        setError('Credenciais invalidas.')
+      }
       setLoading(false)
-    }
+    }, 500)
   }
 
   return (
@@ -75,25 +70,24 @@ export function AdminLogin({ theme, onToggleTheme }: AdminLoginProps) {
                   Acesso Administrativo
                 </h1>
                 <p className="text-xs text-black/50 dark:text-white/50">
-                  Área restrita
+                  Entre com suas credenciais
                 </p>
               </div>
             </div>
 
             <form onSubmit={handleLogin} className="space-y-4">
               <Input
-                label="Email"
-                type="email"
-                placeholder="seu@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                autoComplete="email"
+                label="Usuario"
+                placeholder="admin"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                autoComplete="username"
               />
               <div className="relative">
                 <Input
                   label="Senha"
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="Sua senha"
+                  placeholder="Senha"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   autoComplete="current-password"
@@ -115,15 +109,13 @@ export function AdminLogin({ theme, onToggleTheme }: AdminLoginProps) {
                 Entrar
               </Button>
             </form>
-          </div>
 
-          {!firebaseReady && (
-            <p className="text-xs text-center text-rose dark:text-rose-light/50 mt-4">
-              {initError
-                ? `Firebase: ${initError}.`
-                : 'Firebase nao configurado — modo demonstracao.'}
-            </p>
-          )}
+            <div className="mt-6 p-3 bg-rose-50 dark:bg-rose-dark/20 rounded-lg">
+              <p className="text-xs text-rose dark:text-rose-light text-center">
+                Credenciais temporarias: admin / nb123456
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>

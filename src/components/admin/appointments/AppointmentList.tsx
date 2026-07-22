@@ -1,22 +1,22 @@
 import { useState } from 'react'
-import { Calendar, Clock, Phone, CreditCard, Check, X, Ban, Eye, ChevronDown, ChevronUp } from 'lucide-react'
+import { Clock, ChevronDown, ChevronUp, Check, X, Ban, Edit, Calendar as CalendarIcon, Trash2 } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { formatBookingDate, formatPrice } from '@/lib/utils'
-import { STATUS_LABELS } from '@/constants'
+import { STATUS_LABELS, PAYMENT_LABELS } from '@/constants'
 import type { Appointment, AppointmentStatus } from '@/types'
 
 interface AppointmentListProps {
   appointments: Appointment[]
   loading: boolean
   onUpdateStatus: (id: string, status: AppointmentStatus) => void
-}
-
-const paymentLabels: Record<string, string> = {
-  pix: 'PIX',
-  card: 'Cartão',
-  cash: 'Dinheiro',
-  to_combine: 'A combinar',
+  onConfirm: (id: string) => void
+  onCancel: (id: string) => void
+  onComplete: (id: string) => void
+  onNoShow: (id: string) => void
+  onEdit: (id: string) => void
+  onReschedule: (id: string) => void
+  onDelete: (id: string) => void
 }
 
 const statusColors: Record<string, string> = {
@@ -27,10 +27,24 @@ const statusColors: Record<string, string> = {
   no_show: 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400',
 }
 
+function PhoneIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M22 16.92v3a2 2 0 0 1-2.14 2 19.67 19.67 0 0 1-4.63-1.4 19.67 19.67 0 0 1-4.63-1.4 19.67 19.67 0 0 1-4.63-1.4 2 2 0 0 1-.06-3A19.67 19.67 0 0 1 2 7.92a2 2 0 0 1 2-2h3a2 2 0 0 1 2 1.72 19.67 19.67 0 0 0 4.63 1.4 19.67 19.67 0 0 0 4.63 1.4A2 2 0 0 1 22 16.92z" />
+    </svg>
+  )
+}
+
 export function AppointmentList({
   appointments,
   loading,
-  onUpdateStatus,
+  onConfirm,
+  onCancel,
+  onComplete,
+  onNoShow,
+  onEdit,
+  onReschedule,
+  onDelete,
 }: AppointmentListProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null)
 
@@ -54,7 +68,7 @@ export function AppointmentList({
     return (
       <div className="text-center py-16">
         <div className="w-16 h-16 rounded-full bg-rose-50 dark:bg-rose-dark/20 flex items-center justify-center mx-auto mb-4">
-          <Calendar className="w-8 h-8 text-rose dark:text-rose-light" />
+          <CalendarIcon className="w-8 h-8 text-rose dark:text-rose-light" />
         </div>
         <h3 className="font-serif text-lg font-semibold text-black dark:text-white mb-2">
           Nenhum agendamento
@@ -78,7 +92,7 @@ export function AppointmentList({
             >
               <div className="flex items-start gap-3">
                 <div className="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-dark/20 flex items-center justify-center shrink-0">
-                  <Calendar className="w-5 h-5 text-rose dark:text-rose-light" />
+                  <CalendarIcon className="w-5 h-5 text-rose dark:text-rose-light" />
                 </div>
                 <div>
                   <h4 className="font-medium text-black dark:text-white">
@@ -86,12 +100,12 @@ export function AppointmentList({
                   </h4>
                   <div className="flex items-center gap-3 text-xs text-black/50 dark:text-white/50 mt-1">
                     <span className="flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      {formatBookingDate(apt.date)}
-                    </span>
-                    <span className="flex items-center gap-1">
                       <Clock className="w-3 h-3" />
                       {apt.time}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <PhoneIcon className="w-3 h-3" />
+                      {apt.clientPhone}
                     </span>
                   </div>
                 </div>
@@ -115,28 +129,28 @@ export function AppointmentList({
             {isExpanded && (
               <div className="mt-4 pt-4 border-t border-rose-100 dark:border-rose-dark/20 animate-fade-in">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm mb-4">
-                  <div className="flex items-center gap-2 text-black dark:text-white/70">
-                    <ScissorsIcon className="w-4 h-4 text-rose dark:text-rose-light" />
-                    <span className="text-black/50 dark:text-white/50">Serviço:</span>
-                    <span className="font-medium text-black dark:text-white">{apt.serviceName}</span>
+                  <div>
+                    <p className="text-xs text-black/50 dark:text-white/50">Servico</p>
+                    <p className="font-medium text-black dark:text-white">{apt.serviceName}</p>
                   </div>
-                  <div className="flex items-center gap-2 text-black dark:text-white/70">
-                    <Phone className="w-4 h-4 text-rose dark:text-rose-light" />
-                    <span className="text-black/50 dark:text-white/50">WhatsApp:</span>
-                    <span className="font-medium text-black dark:text-white">{apt.clientPhone}</span>
+                  <div>
+                    <p className="text-xs text-black/50 dark:text-white/50">Duracao</p>
+                    <p className="font-medium text-black dark:text-white">{apt.serviceDuration}min</p>
                   </div>
-                  <div className="flex items-center gap-2 text-black dark:text-white/70">
-                    <CreditCard className="w-4 h-4 text-rose dark:text-rose-light" />
-                    <span className="text-black/50 dark:text-white/50">Pagamento:</span>
-                    <span className="font-medium text-black dark:text-white">
-                      {paymentLabels[apt.paymentMethod] || apt.paymentMethod}
-                    </span>
+                  <div>
+                    <p className="text-xs text-black/50 dark:text-white/50">Data</p>
+                    <p className="font-medium text-black dark:text-white">{formatBookingDate(apt.date)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-black/50 dark:text-white/50">Pagamento</p>
+                    <p className="font-medium text-black dark:text-white">
+                      {PAYMENT_LABELS[apt.paymentMethod] || apt.paymentMethod}
+                    </p>
                   </div>
                   {apt.notes && (
-                    <div className="flex items-start gap-2 text-black dark:text-white/70 sm:col-span-2">
-                      <Eye className="w-4 h-4 text-rose dark:text-rose-light mt-0.5" />
-                      <span className="text-black/50 dark:text-white/50">Obs:</span>
-                      <span className="font-medium text-black dark:text-white">{apt.notes}</span>
+                    <div className="sm:col-span-2">
+                      <p className="text-xs text-black/50 dark:text-white/50">Observacoes</p>
+                      <p className="font-medium text-black dark:text-white">{apt.notes}</p>
                     </div>
                   )}
                 </div>
@@ -146,7 +160,8 @@ export function AppointmentList({
                     <>
                       <Button
                         size="sm"
-                        onClick={() => onUpdateStatus(apt.id, 'confirmed')}
+                        onClick={() => { onConfirm(apt.id); setExpandedId(null) }}
+                        className="flex items-center gap-1"
                       >
                         <Check className="w-3.5 h-3.5" />
                         Confirmar
@@ -154,7 +169,8 @@ export function AppointmentList({
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => onUpdateStatus(apt.id, 'cancelled')}
+                        onClick={() => { onCancel(apt.id); setExpandedId(null) }}
+                        className="flex items-center gap-1"
                       >
                         <X className="w-3.5 h-3.5" />
                         Cancelar
@@ -165,7 +181,8 @@ export function AppointmentList({
                     <>
                       <Button
                         size="sm"
-                        onClick={() => onUpdateStatus(apt.id, 'completed')}
+                        onClick={() => { onComplete(apt.id); setExpandedId(null) }}
+                        className="flex items-center gap-1"
                       >
                         <Check className="w-3.5 h-3.5" />
                         Concluir
@@ -173,17 +190,42 @@ export function AppointmentList({
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => onUpdateStatus(apt.id, 'no_show')}
+                        onClick={() => { onNoShow(apt.id); setExpandedId(null) }}
+                        className="flex items-center gap-1"
                       >
                         <Ban className="w-3.5 h-3.5" />
-                        Não compareceu
+                        Não Compareceu
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => { onEdit(apt.id); setExpandedId(null) }}
+                        className="flex items-center gap-1"
+                      >
+                        <Edit className="w-3.5 h-3.5" />
+                        Editar
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => { onReschedule(apt.id); setExpandedId(null) }}
+                        className="flex items-center gap-1"
+                      >
+                        <CalendarIcon className="w-3.5 h-3.5" />
+                        Reagendar
                       </Button>
                     </>
                   )}
                   {(apt.status === 'completed' || apt.status === 'cancelled' || apt.status === 'no_show') && (
-                    <span className="text-xs text-rose dark:text-rose-light/50 italic px-3 py-2">
-                      Este agendamento foi {STATUS_LABELS[apt.status].toLowerCase()}.
-                    </span>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => { onDelete(apt.id); setExpandedId(null) }}
+                      className="flex items-center gap-1 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      Excluir
+                    </Button>
                   )}
                 </div>
               </div>
@@ -192,18 +234,5 @@ export function AppointmentList({
         )
       })}
     </div>
-  )
-}
-
-function ScissorsIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <circle cx="6" cy="6" r="3" />
-      <circle cx="6" cy="18" r="3" />
-      <line x1="8.6" y1="8.6" x2="20" y2="20" />
-      <line x1="15.4" y1="15.4" x2="20" y2="20" />
-      <line x1="8.6" y1="15.4" x2="20" y2="4" />
-      <line x1="15.4" y1="8.6" x2="20" y2="4" />
-    </svg>
   )
 }

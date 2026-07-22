@@ -11,6 +11,7 @@ import {
   type FirestoreError,
 } from 'firebase/firestore'
 import { db, firebaseReady } from './config'
+import { createNotification } from './notifications'
 import type { Appointment, AppointmentStatus } from '@/types'
 
 const STORAGE_KEY = 'nb_appointments'
@@ -126,6 +127,23 @@ export async function createAppointment(
     }
     all.push(appointment)
     saveLocalAppointments(all)
+
+    const days = ['domingo', 'segunda-feira', 'terca-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sabado']
+    const [, month, day] = data.date.split('-').map(Number)
+    const dateObj = new Date(new Date().getFullYear(), month - 1, day)
+    const dayName = days[dateObj.getDay()]
+
+    createNotification({
+      type: 'new_appointment',
+      title: 'Novo Agendamento',
+      message: `${data.clientName} acabou de agendar ${data.serviceName} para ${dayName} as ${data.time}.`,
+      appointmentId: appointment.id,
+      clientName: data.clientName,
+      clientPhone: data.clientPhone,
+      date: data.date,
+      time: data.time,
+    })
+
     return appointment
   }
 
@@ -144,6 +162,23 @@ export async function createAppointment(
       status: 'pending',
       createdAt: new Date().toISOString(),
     })
+
+    const days = ['domingo', 'segunda-feira', 'terca-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sabado']
+    const [, month, day] = data.date.split('-').map(Number)
+    const dateObj = new Date(new Date().getFullYear(), month - 1, day)
+    const dayName = days[dateObj.getDay()]
+
+    createNotification({
+      type: 'new_appointment',
+      title: 'Novo Agendamento',
+      message: `${data.clientName} acabou de agendar ${data.serviceName} para ${dayName} as ${data.time}.`,
+      appointmentId: docRef.id,
+      clientName: data.clientName,
+      clientPhone: data.clientPhone,
+      date: data.date,
+      time: data.time,
+    })
+
     return { ...appointment, id: docRef.id }
   } catch (err) {
     const firestoreErr = err as FirestoreError
@@ -197,22 +232,76 @@ export async function fetchAppointments(
   }
 }
 
+const STATUS_NOTIFICATIONS: Record<string, { title: string; message: (name: string, service: string, date: string, time: string) => string } | null> = {
+  confirmed: {
+    title: 'Agendamento Confirmado',
+    message: (name, service, date, time) => `Agendamento de ${name} (${service}) confirmado para ${date} as ${time}.`,
+  },
+  cancelled: {
+    title: 'Agendamento Cancelado',
+    message: (name, service) => `${name} cancelou o atendimento de ${service}.`,
+  },
+  completed: {
+    title: 'Atendimento Finalizado',
+    message: (name, service) => `Atendimento de ${name} (${service}) finalizado.`,
+  },
+}
+
 export async function updateAppointmentStatus(
   id: string,
-  status: AppointmentStatus
+  status: AppointmentStatus,
+  appointmentData?: { clientName: string; clientPhone: string; serviceName: string; date: string; time: string }
 ): Promise<void> {
+  const notifConfig = STATUS_NOTIFICATIONS[status]
+
   if (!firebaseReady || !db) {
     const all = getLocalAppointments()
     const idx = all.findIndex((a) => a.id === id)
     if (idx !== -1) {
       all[idx].status = status
       saveLocalAppointments(all)
+
+      if (notifConfig && appointmentData) {
+        createNotification({
+          type: status === 'confirmed' ? 'confirmed' : status === 'cancelled' ? 'cancelled' : 'completed',
+          title: notifConfig.title,
+          message: notifConfig.message(
+            appointmentData.clientName,
+            appointmentData.serviceName,
+            appointmentData.date,
+            appointmentData.time
+          ),
+          appointmentId: id,
+          clientName: appointmentData.clientName,
+          clientPhone: appointmentData.clientPhone,
+          date: appointmentData.date,
+          time: appointmentData.time,
+        })
+      }
     }
     return
   }
 
   try {
     await updateDoc(doc(db, 'appointments', id), { status })
+
+    if (notifConfig && appointmentData) {
+      createNotification({
+        type: status === 'confirmed' ? 'confirmed' : status === 'cancelled' ? 'cancelled' : 'completed',
+        title: notifConfig.title,
+        message: notifConfig.message(
+          appointmentData.clientName,
+          appointmentData.serviceName,
+          appointmentData.date,
+          appointmentData.time
+        ),
+        appointmentId: id,
+        clientName: appointmentData.clientName,
+        clientPhone: appointmentData.clientPhone,
+        date: appointmentData.date,
+        time: appointmentData.time,
+      })
+    }
   } catch {
     const all = getLocalAppointments()
     const idx = all.findIndex((a) => a.id === id)
