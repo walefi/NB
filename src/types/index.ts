@@ -84,3 +84,82 @@ export interface Notification {
   createdAt: string
   read: boolean
 }
+
+export interface DaySchedule {
+  open: boolean
+  startTime: string
+  endTime: string
+}
+
+export interface BreakInterval {
+  id: string
+  startTime: string
+  endTime: string
+  label: string
+}
+
+export interface DateBlock {
+  id: string
+  date: string
+  reason: string
+  type: 'vacation' | 'course' | 'holiday' | 'external' | 'day_off' | 'other'
+}
+
+export interface TimeBlock {
+  id: string
+  date: string
+  time: string
+  reason: string
+}
+
+export interface PaymentMethodConfig {
+  id: string
+  enabled: boolean
+  label: string
+}
+
+export interface BusinessPolicies {
+  minAdvanceHours: number
+  maxAdvanceDays: number
+  cancelBeforeHours: number
+  rescheduleAllowed: boolean
+  confirmationMessage: string
+  cancellationMessage: string
+}
+
+export interface BusinessPreferences {
+  theme: ThemeMode
+  language: string
+  currency: string
+  dateFormat: string
+  timeFormat: string
+}
+
+export interface BusinessSettings {
+  id: string
+  studioName: string
+  ownerName: string
+  phone: string
+  whatsapp: string
+  instagram: string
+  email: string
+  address: string
+  city: string
+  state: string
+  zipCode: string
+  pixKey: string
+  logo: string
+  coverImage: string
+  timezone: string
+  currency: string
+  language: string
+  businessHours: Record<string, DaySchedule>
+  breaks: BreakInterval[]
+  dateBlocks: DateBlock[]
+  timeBlocks: TimeBlock[]
+  paymentMethods: PaymentMethodConfig[]
+  policies: BusinessPolicies
+  preferences: BusinessPreferences
+  createdAt: string
+  updatedAt: string
+}

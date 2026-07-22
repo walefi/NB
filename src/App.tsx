@@ -5,6 +5,7 @@ import { BookingConfirmation } from '@/pages/booking-confirmation'
 import { AdminLoginPage } from '@/pages/admin-login'
 import { AdminDashboard } from '@/pages/admin-dashboard'
 import { AdminNotifications } from '@/pages/admin-notifications'
+import { AdminSettings } from '@/pages/admin-settings'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const authed = localStorage.getItem('nb_admin_auth') === 'true'
@@ -46,6 +47,11 @@ export default function App() {
         <Route path="/admin/notifications" element={
           <ProtectedRoute>
             <AdminNotifications theme={theme} onToggleTheme={toggleTheme} />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/settings" element={
+          <ProtectedRoute>
+            <AdminSettings theme={theme} onToggleTheme={toggleTheme} />
           </ProtectedRoute>
         } />
       </Routes>
