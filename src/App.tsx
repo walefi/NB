@@ -6,6 +6,7 @@ import { AdminLoginPage } from '@/pages/admin-login'
 import { AdminDashboard } from '@/pages/admin-dashboard'
 import { AdminNotifications } from '@/pages/admin-notifications'
 import { AdminSettings } from '@/pages/admin-settings'
+import { AdminCalendar } from '@/pages/admin-calendar'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const authed = localStorage.getItem('nb_admin_auth') === 'true'
@@ -36,7 +37,7 @@ export default function App() {
         } />
         <Route path="/admin/calendar" element={
           <ProtectedRoute>
-            <AdminDashboard theme={theme} onToggleTheme={toggleTheme} />
+            <AdminCalendar theme={theme} onToggleTheme={toggleTheme} />
           </ProtectedRoute>
         } />
         <Route path="/admin/stats" element={

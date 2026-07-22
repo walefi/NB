@@ -311,3 +311,100 @@ export async function updateAppointmentStatus(
     }
   }
 }
+
+export async function rescheduleAppointment(
+  id: string,
+  newDate: string,
+  newTime: string,
+  appointmentData?: { clientName: string; clientPhone: string; serviceName: string; date: string; time: string }
+): Promise<void> {
+  if (!firebaseReady || !db) {
+    const all = getLocalAppointments()
+    const idx = all.findIndex((a) => a.id === id)
+    if (idx !== -1) {
+      all[idx].date = newDate
+      all[idx].time = newTime
+      saveLocalAppointments(all)
+
+      createNotification({
+        type: 'rescheduled',
+        title: 'Agendamento Reagendado',
+        message: `${appointmentData?.clientName || 'Cliente'} reagendado de ${appointmentData?.date} ${appointmentData?.time} para ${newDate} ${newTime}.`,
+        appointmentId: id,
+        clientName: appointmentData?.clientName || '',
+        clientPhone: appointmentData?.clientPhone || '',
+        date: newDate,
+        time: newTime,
+      }).catch(() => {})
+    }
+    return
+  }
+
+  try {
+    await updateDoc(doc(db, 'appointments', id), { date: newDate, time: newTime })
+
+    createNotification({
+      type: 'rescheduled',
+      title: 'Agendamento Reagendado',
+      message: `${appointmentData?.clientName || 'Cliente'} reagendado de ${appointmentData?.date} ${appointmentData?.time} para ${newDate} ${newTime}.`,
+      appointmentId: id,
+      clientName: appointmentData?.clientName || '',
+      clientPhone: appointmentData?.clientPhone || '',
+      date: newDate,
+      time: newTime,
+    }).catch(() => {})
+  } catch {
+    const all = getLocalAppointments()
+    const idx = all.findIndex((a) => a.id === id)
+    if (idx !== -1) {
+      all[idx].date = newDate
+      all[idx].time = newTime
+      saveLocalAppointments(all)
+    }
+  }
+}
+
+export async function moveAppointment(
+  id: string,
+  newDate: string,
+  newTime: string
+): Promise<void> {
+  if (!firebaseReady || !db) {
+    const all = getLocalAppointments()
+    const idx = all.findIndex((a) => a.id === id)
+    if (idx !== -1) {
+      all[idx].date = newDate
+      all[idx].time = newTime
+      saveLocalAppointments(all)
+    }
+    return
+  }
+
+  try {
+    await updateDoc(doc(db, 'appointments', id), { date: newDate, time: newTime })
+  } catch {
+    const all = getLocalAppointments()
+    const idx = all.findIndex((a) => a.id === id)
+    if (idx !== -1) {
+      all[idx].date = newDate
+      all[idx].time = newTime
+      saveLocalAppointments(all)
+    }
+  }
+}
+
+export async function deleteAppointment(id: string): Promise<void> {
+  if (!firebaseReady || !db) {
+    const all = getLocalAppointments().filter((a) => a.id !== id)
+    saveLocalAppointments(all)
+    return
+  }
+
+  try {
+    const { deleteDoc } = await import('firebase/firestore')
+    await deleteDoc(doc(db, 'appointments', id))
+  } catch {
+    const all = getLocalAppointments().filter((a) => a.id !== id)
+    saveLocalAppointments(all)
+  }
+}
