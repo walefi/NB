@@ -116,7 +116,10 @@ export function useCalendar() {
     const year = d.getFullYear()
     const month = d.getMonth()
     const start = `${year}-${String(month + 1).padStart(2, '0')}-01`
-    const end = new Date(year, month + 1, 0).toISOString().split('T')[0]
+    const endYear = month === 11 ? year + 1 : year
+    const endMonth = month === 11 ? 0 : month + 1
+    const endD = new Date(endYear, endMonth, 0)
+    const end = `${endD.getFullYear()}-${String(endD.getMonth() + 1).padStart(2, '0')}-${String(endD.getDate()).padStart(2, '0')}`
     return filteredAppointments.filter((a) => a.date >= start && a.date <= end)
   }, [filteredAppointments, currentDate])
 

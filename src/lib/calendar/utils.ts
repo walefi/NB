@@ -256,7 +256,10 @@ export function addWeeks(dateStr: string, weeks: number): string {
 export function addMonths(dateStr: string, months: number): string {
   const d = new Date(dateStr + 'T12:00:00')
   d.setMonth(d.getMonth() + months)
-  return d.toISOString().split('T')[0]
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
 }
 
 export function getDayNameShort(date: string): string {

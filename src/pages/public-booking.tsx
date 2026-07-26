@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Sparkles, ArrowDown, Scissors } from 'lucide-react'
 import { Header } from '@/components/shared/Header'
 import { Button } from '@/components/ui/Button'
@@ -30,6 +31,7 @@ function generateBookingId(): string {
 }
 
 export function PublicBooking({ theme, onToggleTheme }: PublicBookingProps) {
+  const navigate = useNavigate()
   const { services, loading: servicesLoading, error: servicesError } = useServices()
   const [step, setStep] = useState<BookingStep>(1)
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null)
@@ -123,7 +125,7 @@ export function PublicBooking({ theme, onToggleTheme }: PublicBookingProps) {
     }
 
     try {
-      await createAppointment({
+      const result = await createAppointment({
         serviceId: service.id,
         serviceName: service.name,
         servicePrice: service.price,
@@ -137,6 +139,15 @@ export function PublicBooking({ theme, onToggleTheme }: PublicBookingProps) {
       setConfirmed(confirmedData)
       setStep(7)
       scrollToTop()
+      navigate('/confirmacao', {
+        state: {
+          appointment: {
+            ...result,
+            id: result.id,
+          },
+        },
+        replace: true,
+      })
     } catch (err) {
       if (err instanceof AppointmentsError) {
         setConfirmError(err.message)

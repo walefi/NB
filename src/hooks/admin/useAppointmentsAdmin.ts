@@ -75,7 +75,8 @@ export function useAppointmentsAdmin({
   }, [appointments, dateFilter, statusFilter, searchQuery])
 
   const stats = useMemo(() => {
-    const today = new Date().toISOString().split('T')[0]
+    const now = new Date()
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
     const todayAppointments = filteredAppointments.filter((a) => a.date === today && a.status !== 'cancelled')
     const pending = filteredAppointments.filter((a) => a.status === 'pending')
     const confirmed = filteredAppointments.filter((a) => a.status === 'confirmed')

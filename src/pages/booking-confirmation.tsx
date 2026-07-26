@@ -49,7 +49,7 @@ export function BookingConfirmation({ theme, onToggleTheme }: BookingConfirmatio
   }
 
   const salonPhone = settings?.whatsapp || settings?.phone || ''
-  const message = `Ola!\n\nAcabei de realizar um agendamento:\n\nNome: ${appointment.clientName}\nServico: ${appointment.serviceName}\nData: ${formatDate(appointment.date)}\nHorario: ${appointment.time}\n\nAguardo confirmacao.`
+  const message = `Ola!\n\nAcabei de realizar um agendamento:\n\nNome: ${appointment.clientName}\nTelefone: ${appointment.clientPhone}\nServico: ${appointment.serviceName}\nData: ${formatDate(appointment.date)}\nHorario: ${appointment.time}\n\nAguardo confirmacao.`
   const whatsappUrl = salonPhone
     ? buildWhatsAppUrl(salonPhone, message)
     : `https://wa.me/55?text=${encodeURIComponent(message)}`

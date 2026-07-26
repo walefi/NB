@@ -8,7 +8,8 @@ interface StatsCardsProps {
 }
 
 export function StatsCards({ appointments }: StatsCardsProps) {
-  const today = new Date().toISOString().split('T')[0]
+  const now = new Date()
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
 
   const todayAppointments = appointments.filter(
     (a) => a.date === today && a.status !== 'cancelled'
