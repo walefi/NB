@@ -40,6 +40,7 @@ function mapNotifDoc(docData: DocumentData, id: string): Notification {
     appointmentId: data.appointmentId ?? '',
     clientName: data.clientName ?? '',
     clientPhone: data.clientPhone ?? '',
+    serviceName: data.serviceName ?? '',
     date: data.date ?? '',
     time: data.time ?? '',
     createdAt: data.createdAt ?? new Date().toISOString(),
@@ -54,6 +55,7 @@ export interface CreateNotificationData {
   appointmentId: string
   clientName: string
   clientPhone: string
+  serviceName: string
   date: string
   time: string
 }
@@ -81,6 +83,7 @@ export async function createNotification(data: CreateNotificationData): Promise<
       appointmentId: data.appointmentId,
       clientName: data.clientName,
       clientPhone: data.clientPhone,
+      serviceName: data.serviceName,
       date: data.date,
       time: data.time,
       createdAt: new Date().toISOString(),

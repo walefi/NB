@@ -12,7 +12,7 @@ interface AppointmentFiltersProps {
 const dateOptions = [
   { value: '', label: 'Todos' },
   { value: 'today', label: 'Hoje' },
-  { value: 'tomorrow', label: 'Amanhã' },
+  { value: 'tomorrow', label: 'Amanha' },
   { value: 'week', label: 'Esta semana' },
 ]
 
@@ -28,7 +28,7 @@ export function AppointmentFilters({
     { value: 'all', label: 'Todos' },
     { value: 'pending', label: 'Pendente' },
     { value: 'confirmed', label: 'Confirmado' },
-    { value: 'completed', label: 'Concluído' },
+    { value: 'completed', label: 'Concluido' },
     { value: 'cancelled', label: 'Cancelado' },
   ]
 

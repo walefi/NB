@@ -69,6 +69,7 @@ export async function checkAndSendReminders(appointments: Appointment[]): Promis
         appointmentId: apt.id,
         clientName: apt.clientName,
         clientPhone: apt.clientPhone,
+        serviceName: apt.serviceName,
         date: apt.date,
         time: apt.time,
       })
@@ -83,6 +84,7 @@ export async function checkAndSendReminders(appointments: Appointment[]): Promis
         appointmentId: apt.id,
         clientName: apt.clientName,
         clientPhone: apt.clientPhone,
+        serviceName: apt.serviceName,
         date: apt.date,
         time: apt.time,
       })
@@ -97,6 +99,7 @@ export async function checkAndSendReminders(appointments: Appointment[]): Promis
         appointmentId: apt.id,
         clientName: apt.clientName,
         clientPhone: apt.clientPhone,
+        serviceName: apt.serviceName,
         date: apt.date,
         time: apt.time,
       })

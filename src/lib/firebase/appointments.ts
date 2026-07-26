@@ -140,6 +140,7 @@ export async function createAppointment(
       appointmentId: appointment.id,
       clientName: data.clientName,
       clientPhone: data.clientPhone,
+      serviceName: data.serviceName,
       date: data.date,
       time: data.time,
     }).catch(() => {})
@@ -175,6 +176,7 @@ export async function createAppointment(
       appointmentId: docRef.id,
       clientName: data.clientName,
       clientPhone: data.clientPhone,
+      serviceName: data.serviceName,
       date: data.date,
       time: data.time,
     }).catch(() => {})
@@ -274,6 +276,7 @@ export async function updateAppointmentStatus(
           appointmentId: id,
           clientName: appointmentData.clientName,
           clientPhone: appointmentData.clientPhone,
+          serviceName: appointmentData.serviceName,
           date: appointmentData.date,
           time: appointmentData.time,
         }).catch(() => {})
@@ -298,6 +301,7 @@ export async function updateAppointmentStatus(
         appointmentId: id,
         clientName: appointmentData.clientName,
         clientPhone: appointmentData.clientPhone,
+        serviceName: appointmentData.serviceName,
         date: appointmentData.date,
         time: appointmentData.time,
       }).catch(() => {})
@@ -333,6 +337,7 @@ export async function rescheduleAppointment(
         appointmentId: id,
         clientName: appointmentData?.clientName || '',
         clientPhone: appointmentData?.clientPhone || '',
+        serviceName: appointmentData?.serviceName || '',
         date: newDate,
         time: newTime,
       }).catch(() => {})
@@ -350,6 +355,7 @@ export async function rescheduleAppointment(
       appointmentId: id,
       clientName: appointmentData?.clientName || '',
       clientPhone: appointmentData?.clientPhone || '',
+      serviceName: appointmentData?.serviceName || '',
       date: newDate,
       time: newTime,
     }).catch(() => {})

@@ -1,9 +1,8 @@
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale/pt-BR'
-import { Calendar, LogOut, BellRing, BellOff } from 'lucide-react'
+import { Calendar, LogOut } from 'lucide-react'
 import { NotificationBell } from '@/components/admin/notifications/NotificationBell'
 import { useNotifications } from '@/hooks/admin/useNotifications'
-import { useFCM } from '@/hooks/admin/useFCM'
 import type { ThemeMode } from '@/types'
 
 interface DesktopHeaderProps {
@@ -16,7 +15,6 @@ export function DesktopHeader({ onLogout }: DesktopHeaderProps) {
   const today = format(new Date(), "EEEE, d 'de' MMMM 'de' yyyy", { locale: ptBR })
   const capitalizedToday = today.charAt(0).toUpperCase() + today.slice(1)
   const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification } = useNotifications()
-  const { supported, enabled, enabling, enableNotifications, disableNotifications } = useFCM()
 
   return (
     <header className="hidden lg:block h-16 bg-white/95 dark:bg-black/95 backdrop-blur-sm border-b border-rose-100 dark:border-rose-dark/20">
@@ -36,26 +34,6 @@ export function DesktopHeader({ onLogout }: DesktopHeaderProps) {
         </div>
 
         <div className="flex items-center gap-3">
-          {supported && (
-            enabled ? (
-              <button
-                onClick={disableNotifications}
-                className="w-10 h-10 rounded-xl bg-green-50 dark:bg-green-900/20 flex items-center justify-center hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
-                title="Notificacoes ativas - clique para desativar"
-              >
-                <BellRing className="w-5 h-5 text-green-600 dark:text-green-400" />
-              </button>
-            ) : (
-              <button
-                onClick={enableNotifications}
-                disabled={enabling}
-                className="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-dark/20 flex items-center justify-center hover:bg-rose-100 dark:hover:bg-rose-dark/30 transition-colors disabled:opacity-50"
-                title="Ativar notificacoes push"
-              >
-                <BellOff className="w-5 h-5 text-rose dark:text-rose-light" />
-              </button>
-            )
-          )}
           <NotificationBell
             notifications={notifications}
             unreadCount={unreadCount}

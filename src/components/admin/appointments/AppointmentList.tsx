@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Clock, ChevronDown, ChevronUp, Check, X, Ban, Edit, Calendar as CalendarIcon, Trash2 } from 'lucide-react'
+import { Clock, ChevronDown, ChevronUp, Check, X, Ban, Edit, Calendar as CalendarIcon, Trash2, MessageCircle, Copy } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { formatBookingDate, formatPrice } from '@/lib/utils'
@@ -33,6 +33,27 @@ function PhoneIcon({ className }: { className?: string }) {
       <path d="M22 16.92v3a2 2 0 0 1-2.14 2 19.67 19.67 0 0 1-4.63-1.4 19.67 19.67 0 0 1-4.63-1.4 19.67 19.67 0 0 1-4.63-1.4 2 2 0 0 1-.06-3A19.67 19.67 0 0 1 2 7.92a2 2 0 0 1 2-2h3a2 2 0 0 1 2 1.72 19.67 19.67 0 0 0 4.63 1.4 19.67 19.67 0 0 0 4.63 1.4A2 2 0 0 1 22 16.92z" />
     </svg>
   )
+}
+
+function openWhatsApp(apt: Appointment): void {
+  const phone = apt.clientPhone.replace(/\D/g, '')
+  const message = encodeURIComponent(
+    `Ola, ${apt.clientName}.\nRecebemos seu agendamento para ${formatBookingDate(apt.date)} as ${apt.time}.`
+  )
+  window.open(`https://wa.me/55${phone}?text=${message}`, '_blank', 'noopener,noreferrer')
+}
+
+function copyAppointmentData(apt: Appointment): void {
+  const text = [
+    `Nome: ${apt.clientName}`,
+    `Telefone: ${apt.clientPhone}`,
+    `Servico: ${apt.serviceName}`,
+    `Data: ${formatBookingDate(apt.date)}`,
+    `Hora: ${apt.time}`,
+    `Pagamento: ${PAYMENT_LABELS[apt.paymentMethod] || apt.paymentMethod}`,
+  ].join('\n')
+
+  navigator.clipboard.writeText(text).catch(() => {})
 }
 
 export function AppointmentList({
@@ -74,7 +95,7 @@ export function AppointmentList({
           Nenhum agendamento
         </h3>
         <p className="text-sm text-black/50 dark:text-white/50">
-          Nenhum agendamento encontrado para este período.
+          Nenhum agendamento encontrado para este periodo.
         </p>
       </div>
     )
@@ -156,6 +177,24 @@ export function AppointmentList({
                 </div>
 
                 <div className="flex flex-wrap gap-2 pt-3 border-t border-rose-100 dark:border-rose-dark/20">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={(e) => { e.stopPropagation(); openWhatsApp(apt) }}
+                    className="flex items-center gap-1 text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20"
+                  >
+                    <MessageCircle className="w-3.5 h-3.5" />
+                    WhatsApp
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={(e) => { e.stopPropagation(); copyAppointmentData(apt) }}
+                    className="flex items-center gap-1"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                    Copiar
+                  </Button>
                   {apt.status === 'pending' && (
                     <>
                       <Button
@@ -194,7 +233,7 @@ export function AppointmentList({
                         className="flex items-center gap-1"
                       >
                         <Ban className="w-3.5 h-3.5" />
-                        Não Compareceu
+                        Nao Compareceu
                       </Button>
                       <Button
                         size="sm"

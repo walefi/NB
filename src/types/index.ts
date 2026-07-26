@@ -79,6 +79,7 @@ export interface Notification {
   appointmentId: string
   clientName: string
   clientPhone: string
+  serviceName: string
   date: string
   time: string
   createdAt: string
@@ -164,12 +165,19 @@ export interface BusinessSettings {
   updatedAt: string
 }
 
-export interface FCMToken {
-  id: string
-  uid: string
-  token: string
-  device: string
-  browser: string
-  createdAt: string
-  updatedAt: string
+export interface NotificationProvider {
+  send(notification: Notification): Promise<boolean>
+}
+
+export interface EmailProvider {
+  send(to: string, subject: string, body: string): Promise<boolean>
+}
+
+export interface PushProvider {
+  send(token: string, title: string, body: string): Promise<boolean>
+  requestPermission(): Promise<string | null>
+}
+
+export interface WhatsAppProvider {
+  send(phone: string, message: string): Promise<boolean>
 }

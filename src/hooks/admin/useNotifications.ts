@@ -1,14 +1,20 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { subscribeToNotifications, markAsRead, markAllAsRead, deleteNotification } from '@/lib/firebase/notifications'
+import { playNotificationSound } from '@/lib/admin/notification-sound'
 import type { Notification } from '@/types'
 
 export function useNotifications() {
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [loading, setLoading] = useState(true)
+  const prevCountRef = useRef(0)
 
   useEffect(() => {
     setLoading(true)
     const unsubscribe = subscribeToNotifications((data) => {
+      if (prevCountRef.current > 0 && data.length > prevCountRef.current) {
+        playNotificationSound()
+      }
+      prevCountRef.current = data.length
       setNotifications(data)
       setLoading(false)
     })

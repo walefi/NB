@@ -21,6 +21,17 @@ const typeColors: Record<string, string> = {
   reminder_30min: 'bg-pink-50 dark:bg-pink-900/20 text-pink-600 dark:text-pink-400',
 }
 
+const typeIcons: Record<string, string> = {
+  new_appointment: '💅',
+  confirmed: '✅',
+  cancelled: '❌',
+  rescheduled: '📅',
+  completed: '✔️',
+  reminder_24h: '⏰',
+  reminder_2h: '⏰',
+  reminder_30min: '⏰',
+}
+
 function formatTimeAgo(dateStr: string): string {
   const now = new Date()
   const date = new Date(dateStr)
@@ -81,8 +92,8 @@ export function NotificationPanel({
                 !notif.read ? 'bg-rose-50/30 dark:bg-rose-dark/5' : ''
               }`}
             >
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${typeColors[notif.type] || 'bg-gray-100 text-gray-500'}`}>
-                <Bell className="w-4 h-4" />
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-sm ${typeColors[notif.type] || 'bg-gray-100 text-gray-500'}`}>
+                {typeIcons[notif.type] || '🔔'}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
@@ -96,6 +107,11 @@ export function NotificationPanel({
                 <p className="text-xs text-black/60 dark:text-white/60 mt-0.5 line-clamp-2">
                   {notif.message}
                 </p>
+                {notif.serviceName && (
+                  <p className="text-[10px] text-rose dark:text-rose-light mt-1 font-medium">
+                    {notif.serviceName}
+                  </p>
+                )}
                 <div className="flex items-center gap-3 mt-1.5">
                   <span className="flex items-center gap-1 text-[10px] text-black/40 dark:text-white/40">
                     <Clock className="w-3 h-3" />

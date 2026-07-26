@@ -178,6 +178,11 @@ export function AdminNotifications({ theme, onToggleTheme }: AdminNotificationsP
                     <p className="text-sm text-black/60 dark:text-white/60 mt-0.5">
                       {notif.message}
                     </p>
+                    {notif.serviceName && (
+                      <p className="text-xs text-rose dark:text-rose-light mt-1 font-medium">
+                        {notif.serviceName}
+                      </p>
+                    )}
                     <div className="flex items-center gap-4 mt-2">
                       <span className="flex items-center gap-1 text-xs text-black/40 dark:text-white/40">
                         <Clock className="w-3 h-3" />
