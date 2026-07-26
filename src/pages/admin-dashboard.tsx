@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Bell } from 'lucide-react'
+import { registerAdminToken } from '@/services/notification-service'
 import { AdminSidebar } from '@/components/admin/layout/AdminSidebar'
 import { AdminHeader } from '@/components/admin/layout/AdminHeader'
 import { DesktopHeader } from '@/components/admin/layout/DesktopHeader'
@@ -25,8 +26,21 @@ interface AdminDashboardProps {
 
 export function AdminDashboard({ theme, onToggleTheme }: AdminDashboardProps) {
   useScrollToTop()
+
+  // Enable notifications handler
+  const handleEnableNotifications = async () => {
+    try {
+      const device = 'desktop'
+      const browser = navigator.userAgent
+      await registerAdminToken(uid, device, browser)
+      alert('Notificações ativadas')
+    } catch (e) {
+      console.error(e)
+      alert('Falha ao ativar notificações')
+    }
+  }
   const navigate = useNavigate()
-  const { logout } = useAuth()
+  const { logout, uid } = useAuth()
   const [dateFilter, setDateFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState<AppointmentStatus | 'all'>('all')
   const [searchQuery, setSearchQuery] = useState('')
@@ -106,6 +120,7 @@ export function AdminDashboard({ theme, onToggleTheme }: AdminDashboardProps) {
               <p className="text-sm text-black/50 dark:text-white/50 mt-1">
                 Gerencie seus agendamentos
               </p>
+              <Button onClick={handleEnableNotifications} className="mt-4">Ativar notificações</Button>
             </div>
           </div>
 
