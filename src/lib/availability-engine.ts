@@ -1,3 +1,4 @@
+import { APPOINTMENT_STATUS } from '@/constants/appointment-status'
 import type { Appointment, BusinessSettings, DaySchedule, BreakInterval, DateBlock, TimeBlock } from '@/types'
 
 interface Slot {
@@ -53,7 +54,7 @@ function hasOverlap(
 
   return appointments.some((a) => {
     if (a.date !== date) return false
-    if (a.status !== 'confirmed' && a.status !== 'completed') return false
+    if (a.status !== APPOINTMENT_STATUS.CONFIRMED && a.status !== APPOINTMENT_STATUS.COMPLETED) return false
     const aStart = timeToMinutes(a.time)
     const aEnd = aStart + a.serviceDuration
     return newStart < aEnd && newEnd > aStart

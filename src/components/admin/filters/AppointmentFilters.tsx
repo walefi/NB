@@ -1,4 +1,5 @@
-import type { AppointmentStatus } from '@/types'
+import { APPOINTMENT_STATUS } from '@/constants/appointment-status'
+import type { AppointmentStatus } from '@/constants/appointment-status'
 
 interface AppointmentFiltersProps {
   dateFilter: string
@@ -26,10 +27,10 @@ export function AppointmentFilters({
 }: AppointmentFiltersProps) {
   const statusOptions: { value: AppointmentStatus | 'all'; label: string }[] = [
     { value: 'all', label: 'Todos' },
-    { value: 'pending', label: 'Pendente' },
-    { value: 'confirmed', label: 'Confirmado' },
-    { value: 'completed', label: 'Concluido' },
-    { value: 'cancelled', label: 'Cancelado' },
+    { value: APPOINTMENT_STATUS.CONFIRMED, label: 'Confirmado' },
+    { value: APPOINTMENT_STATUS.COMPLETED, label: 'Concluido' },
+    { value: APPOINTMENT_STATUS.CANCELLED, label: 'Cancelado' },
+    { value: APPOINTMENT_STATUS.DELETED, label: 'Excluido' },
   ]
 
   const today = new Date().toISOString().split('T')[0]

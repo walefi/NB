@@ -3,6 +3,7 @@ import { X, Save } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Textarea } from '@/components/ui/Textarea'
+import { APPOINTMENT_STATUS } from '@/constants/appointment-status'
 import type { Appointment, AppointmentStatus } from '@/types'
 import { formatBookingDate, formatPrice } from '@/lib/utils'
 import { PAYMENT_LABELS } from '@/constants'
@@ -17,7 +18,7 @@ export function EditModal({ appointment, onClose, onUpdate }: EditModalProps) {
   const [clientName, setClientName] = useState('')
   const [clientPhone, setClientPhone] = useState('')
   const [notes, setNotes] = useState('')
-  const [status, setStatus] = useState<AppointmentStatus>('confirmed')
+  const [status, setStatus] = useState<AppointmentStatus>(APPOINTMENT_STATUS.CONFIRMED)
 
   if (!appointment) return null
 
@@ -73,11 +74,11 @@ export function EditModal({ appointment, onClose, onUpdate }: EditModalProps) {
               onChange={(e) => setStatus(e.target.value as AppointmentStatus)}
               className="w-full px-3 py-2 rounded-xl border-2 border-rose-100 dark:border-rose-dark/30 bg-white dark:bg-black text-black dark:text-white text-sm focus:border-rose dark:focus:border-rose-light focus:ring-2 focus:ring-rose/10 dark:focus:ring-rose/20 outline-none"
             >
-              <option value="pending">Pendente</option>
-              <option value="confirmed">Confirmado</option>
-              <option value="completed">Concluído</option>
-              <option value="cancelled">Cancelado</option>
-              <option value="no_show">Não Compareceu</option>
+              <option value={APPOINTMENT_STATUS.CONFIRMED}>Confirmado</option>
+              <option value={APPOINTMENT_STATUS.COMPLETED}>Concluído</option>
+              <option value={APPOINTMENT_STATUS.CANCELLED}>Cancelado</option>
+              <option value={APPOINTMENT_STATUS.NO_SHOW}>Não Compareceu</option>
+              <option value={APPOINTMENT_STATUS.DELETED}>Excluido</option>
             </select>
           </div>
 

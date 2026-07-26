@@ -10,13 +10,9 @@ export interface Service {
   createdAt: string
 }
 
-export type AppointmentStatus =
-  | 'pending'
-  | 'confirmed'
-  | 'cancelled'
-  | 'completed'
-  | 'no_show'
-  | 'deleted'
+import type { AppointmentStatus as AppointmentStatusBase } from '@/constants/appointment-status'
+
+export type AppointmentStatus = AppointmentStatusBase
 
 export type PaymentMethod = 'pix' | 'card' | 'cash' | 'to_combine'
 

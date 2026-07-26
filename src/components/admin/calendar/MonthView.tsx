@@ -7,6 +7,7 @@ import {
   formatDateShort,
 } from '@/lib/calendar/utils'
 import { getStatusDot } from '@/lib/calendar/utils'
+import { APPOINTMENT_STATUS } from '@/constants/appointment-status'
 import type { Appointment } from '@/types'
 
 interface Props {
@@ -96,9 +97,8 @@ export const MonthView = memo(function MonthView({
                       onSelectAppointment(apt)
                     }}
                     className={`flex items-center gap-1 px-1 py-0.5 rounded text-[10px] truncate cursor-pointer
-                      ${apt.status === 'confirmed' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
-                        apt.status === 'pending' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' :
-                        apt.status === 'completed' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
+                      ${apt.status === APPOINTMENT_STATUS.CONFIRMED ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                        apt.status === APPOINTMENT_STATUS.COMPLETED ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
                         'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
                       }`}
                   >

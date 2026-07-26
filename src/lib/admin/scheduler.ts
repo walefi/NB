@@ -1,3 +1,4 @@
+import { APPOINTMENT_STATUS } from '@/constants/appointment-status'
 import type { Appointment } from '@/types'
 import { createNotification } from '@/lib/firebase/notifications'
 
@@ -55,7 +56,7 @@ function getMinutesUntil(dateStr: string, timeStr: string): number {
 
 export async function checkAndSendReminders(appointments: Appointment[]): Promise<void> {
   const activeAppointments = appointments.filter(
-    (a) => a.status === 'confirmed'
+    (a) => a.status === APPOINTMENT_STATUS.CONFIRMED
   )
 
   for (const apt of activeAppointments) {

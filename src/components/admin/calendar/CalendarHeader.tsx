@@ -7,12 +7,13 @@ import {
   Filter,
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
+import { APPOINTMENT_STATUS } from '@/constants/appointment-status'
 import {
   getMonthYear,
   formatDate,
   getToday,
 } from '@/lib/calendar/utils'
-import type { AppointmentStatus } from '@/types'
+import type { AppointmentStatus } from '@/constants/appointment-status'
 import type { CalendarView } from '@/lib/calendar/utils'
 import type { CalendarFilters } from '@/hooks/admin/useCalendar'
 import type { Service } from '@/types'
@@ -31,11 +32,11 @@ interface Props {
 
 const STATUS_OPTIONS: { value: AppointmentStatus | 'all'; label: string }[] = [
   { value: 'all', label: 'Todos' },
-  { value: 'pending', label: 'Pendente' },
-  { value: 'confirmed', label: 'Confirmado' },
-  { value: 'completed', label: 'Concluido' },
-  { value: 'cancelled', label: 'Cancelado' },
-  { value: 'no_show', label: 'Nao compareceu' },
+  { value: APPOINTMENT_STATUS.CONFIRMED, label: 'Confirmado' },
+  { value: APPOINTMENT_STATUS.COMPLETED, label: 'Concluido' },
+  { value: APPOINTMENT_STATUS.CANCELLED, label: 'Cancelado' },
+  { value: APPOINTMENT_STATUS.NO_SHOW, label: 'Nao compareceu' },
+  { value: APPOINTMENT_STATUS.DELETED, label: 'Excluido' },
 ]
 
 export const CalendarHeader = memo(function CalendarHeader({

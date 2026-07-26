@@ -3,6 +3,7 @@ import { collection, query, where, orderBy, onSnapshot, type DocumentData } from
 import { db, firebaseReady } from '@/lib/firebase/config'
 import { getBusinessSettings } from '@/lib/firebase/settings'
 import { getAvailableSlotsForDate } from '@/lib/availability-engine'
+import { APPOINTMENT_STATUS } from '@/constants/appointment-status'
 import type { Appointment, BusinessSettings } from '@/types'
 
 /**
@@ -61,7 +62,7 @@ export function useAvailableSlots(
           time: d.time ?? '',
           paymentMethod: d.paymentMethod ?? 'to_combine',
           notes: d.notes ?? undefined,
-          status: d.status ?? 'confirmed',
+          status: d.status ?? APPOINTMENT_STATUS.CONFIRMED,
           createdAt: d.createdAt ?? new Date().toISOString(),
         } as Appointment
       })

@@ -56,7 +56,6 @@ export const PAYMENT_METHODS = [
 ] as const
 
 export const STATUS_LABELS: Record<string, string> = {
-  pending: 'Pendente',
   confirmed: 'Confirmado',
   cancelled: 'Cancelado',
   completed: 'Concluido',

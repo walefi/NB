@@ -1,6 +1,7 @@
 import { memo, useRef } from 'react'
 import { Clock, GripVertical } from 'lucide-react'
 import { getStatusBg, getStatusLabel, formatTimeRange, getAppointmentHeight } from '@/lib/calendar/utils'
+import { APPOINTMENT_STATUS } from '@/constants/appointment-status'
 import type { Appointment } from '@/types'
 
 interface Props {
@@ -57,9 +58,8 @@ export const AppointmentCard = memo(function AppointmentCard({
           {height > 70 && (
             <div className="flex items-center gap-2 mt-0.5 ml-4">
               <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
-                appointment.status === 'confirmed' ? 'bg-green-200 text-green-800 dark:bg-green-800/40 dark:text-green-300' :
-                appointment.status === 'pending' ? 'bg-yellow-200 text-yellow-800 dark:bg-yellow-800/40 dark:text-yellow-300' :
-                appointment.status === 'completed' ? 'bg-blue-200 text-blue-800 dark:bg-blue-800/40 dark:text-blue-300' :
+                appointment.status === APPOINTMENT_STATUS.CONFIRMED ? 'bg-green-200 text-green-800 dark:bg-green-800/40 dark:text-green-300' :
+                appointment.status === APPOINTMENT_STATUS.COMPLETED ? 'bg-blue-200 text-blue-800 dark:bg-blue-800/40 dark:text-blue-300' :
                 'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
               }`}>
                 {getStatusLabel(appointment.status)}

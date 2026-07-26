@@ -14,6 +14,7 @@ import {
   MessageCircle,
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
+import { APPOINTMENT_STATUS } from '@/constants/appointment-status'
 import {
   getStatusColor,
   getStatusLabel,
@@ -166,28 +167,19 @@ export const AppointmentDrawer = memo(function AppointmentDrawer({
           </div>
 
           <div className="p-4 border-t border-rose-100 dark:border-rose-dark/20 space-y-2">
-            {appointment.status === 'pending' && (
+            {appointment.status !== APPOINTMENT_STATUS.CANCELLED && appointment.status !== APPOINTMENT_STATUS.COMPLETED && (
               <Button
-                onClick={() => onUpdateStatus(appointment.id, 'confirmed')}
-                className="w-full bg-green-600 hover:bg-green-700 text-white"
-              >
-                <CheckCircle className="w-4 h-4" />
-                Confirmar
-              </Button>
-            )}
-            {appointment.status !== 'cancelled' && appointment.status !== 'completed' && (
-              <Button
-                onClick={() => onUpdateStatus(appointment.id, 'completed')}
+                onClick={() => onUpdateStatus(appointment.id, APPOINTMENT_STATUS.COMPLETED)}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white"
               >
                 <CheckCircle className="w-4 h-4" />
                 Concluir
               </Button>
             )}
-            {appointment.status !== 'cancelled' && appointment.status !== 'completed' && (
+            {appointment.status !== APPOINTMENT_STATUS.CANCELLED && appointment.status !== APPOINTMENT_STATUS.COMPLETED && (
               <Button
                 variant="outline"
-                onClick={() => onUpdateStatus(appointment.id, 'cancelled')}
+                onClick={() => onUpdateStatus(appointment.id, APPOINTMENT_STATUS.CANCELLED)}
                 className="w-full text-red-600 border-red-200 hover:bg-red-50 dark:hover:bg-red-900/20"
               >
                 <XCircle className="w-4 h-4" />

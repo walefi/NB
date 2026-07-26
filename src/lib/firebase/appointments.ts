@@ -12,7 +12,8 @@ import {
 } from 'firebase/firestore'
 import { db, firebaseReady } from './config'
 import { createNotification } from './notifications'
-import type { Appointment, AppointmentStatus } from '@/types'
+import { APPOINTMENT_STATUS, type AppointmentStatus } from '@/constants/appointment-status'
+import type { Appointment } from '@/types'
 
 function timeToMinutes(time: string): number {
   const [h, m] = time.split(':').map(Number)
@@ -29,7 +30,7 @@ function hasOverlap(
   const newEnd = newStart + serviceDuration
   return appointments.some((a) => {
     if (a.date !== date) return false
-    if (a.status !== 'confirmed' && a.status !== 'completed') return false
+    if (a.status !== APPOINTMENT_STATUS.CONFIRMED && a.status !== APPOINTMENT_STATUS.COMPLETED) return false
     const aStart = timeToMinutes(a.time)
     const aEnd = aStart + a.serviceDuration
     return newStart < aEnd && newEnd > aStart
@@ -90,7 +91,7 @@ function mapApptDoc(doc: DocumentData, id: string): Appointment {
     time: data.time ?? '',
     paymentMethod: data.paymentMethod ?? 'to_combine',
     notes: data.notes ?? undefined,
-    status: data.status ?? 'pending',
+    status: data.status ?? APPOINTMENT_STATUS.CONFIRMED,
     createdAt: data.createdAt ?? new Date().toISOString(),
   }
 }
@@ -120,7 +121,7 @@ export async function createAppointment(
   const appointment: Appointment = {
     ...data,
     id: crypto.randomUUID(),
-    status: 'confirmed',
+    status: APPOINTMENT_STATUS.CONFIRMED,
     createdAt: new Date().toISOString(),
   }
 
@@ -175,7 +176,7 @@ export async function createAppointment(
       time: data.time,
       paymentMethod: data.paymentMethod,
       notes: data.notes ?? null,
-      status: 'confirmed',
+    status: APPOINTMENT_STATUS.CONFIRMED,
       createdAt: new Date().toISOString(),
     })
 
@@ -280,7 +281,7 @@ export async function updateAppointmentStatus(
 
       if (notifConfig && appointmentData) {
         createNotification({
-          type: status === 'confirmed' ? 'confirmed' : status === 'cancelled' ? 'cancelled' : 'completed',
+          type: status === APPOINTMENT_STATUS.CONFIRMED ? 'confirmed' : status === APPOINTMENT_STATUS.CANCELLED ? 'cancelled' : 'completed',
           title: notifConfig.title,
           message: notifConfig.message(
             appointmentData.clientName,
@@ -305,7 +306,7 @@ export async function updateAppointmentStatus(
 
     if (notifConfig && appointmentData) {
       createNotification({
-        type: status === 'confirmed' ? 'confirmed' : status === 'cancelled' ? 'cancelled' : 'completed',
+        type: status === APPOINTMENT_STATUS.CONFIRMED ? 'confirmed' : status === APPOINTMENT_STATUS.CANCELLED ? 'cancelled' : 'completed',
         title: notifConfig.title,
         message: notifConfig.message(
           appointmentData.clientName,

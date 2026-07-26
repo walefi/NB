@@ -1,3 +1,4 @@
+import { APPOINTMENT_STATUS } from '@/constants/appointment-status'
 import type { Appointment, AppointmentStatus, BusinessSettings, DaySchedule, BreakInterval, DateBlock, TimeBlock } from '@/types'
 
 export type CalendarView = 'day' | 'week' | 'month'
@@ -31,7 +32,6 @@ const MONTH_NAMES_PT = ['Janeiro', 'Fevereiro', 'Marco', 'Abril', 'Maio', 'Junho
 
 export function getStatusColor(status: AppointmentStatus): string {
   const colors: Record<AppointmentStatus, string> = {
-    pending: 'bg-yellow-100 border-yellow-400 text-yellow-800 dark:bg-yellow-900/30 dark:border-yellow-600 dark:text-yellow-300',
     confirmed: 'bg-green-100 border-green-400 text-green-800 dark:bg-green-900/30 dark:border-green-600 dark:text-green-300',
     cancelled: 'bg-red-100 border-red-400 text-red-800 dark:bg-red-900/30 dark:border-red-600 dark:text-red-300',
     completed: 'bg-blue-100 border-blue-400 text-blue-800 dark:bg-blue-900/30 dark:border-blue-600 dark:text-blue-300',
@@ -43,7 +43,6 @@ export function getStatusColor(status: AppointmentStatus): string {
 
 export function getStatusBg(status: AppointmentStatus): string {
   const colors: Record<AppointmentStatus, string> = {
-    pending: 'border-l-yellow-400 bg-yellow-50 dark:bg-yellow-900/20',
     confirmed: 'border-l-green-400 bg-green-50 dark:bg-green-900/20',
     cancelled: 'border-l-red-400 bg-red-50 dark:bg-red-900/20',
     completed: 'border-l-blue-400 bg-blue-50 dark:bg-blue-900/20',
@@ -55,7 +54,6 @@ export function getStatusBg(status: AppointmentStatus): string {
 
 export function getStatusDot(status: AppointmentStatus): string {
   const dots: Record<AppointmentStatus, string> = {
-    pending: 'bg-yellow-400',
     confirmed: 'bg-green-400',
     cancelled: 'bg-red-400',
     completed: 'bg-blue-400',
@@ -67,7 +65,6 @@ export function getStatusDot(status: AppointmentStatus): string {
 
 export function getStatusLabel(status: AppointmentStatus): string {
   const labels: Record<AppointmentStatus, string> = {
-    pending: 'Pendente',
     confirmed: 'Confirmado',
     cancelled: 'Cancelado',
     completed: 'Concluido',
@@ -121,18 +118,18 @@ export function isSlotAvailable(date: string, time: string, settings: BusinessSe
   if (settings?.breaks && isBreakTime(time, settings.breaks)) return false
 
   const hasConflict = appointments.some(
-    (a) => a.date === date && a.time === time && (a.status === 'confirmed' || a.status === 'completed')
+    (a) => a.date === date && a.time === time && (a.status === APPOINTMENT_STATUS.CONFIRMED || a.status === APPOINTMENT_STATUS.COMPLETED)
   )
   return !hasConflict
 }
 
 export function getAppointmentsForSlot(date: string, time: string, appointments: Appointment[]): Appointment[] {
-  return appointments.filter((a) => a.date === date && a.time === time && (a.status === 'confirmed' || a.status === 'completed'))
+  return appointments.filter((a) => a.date === date && a.time === time && (a.status === APPOINTMENT_STATUS.CONFIRMED || a.status === APPOINTMENT_STATUS.COMPLETED))
 }
 
 export function getAppointmentsForDate(date: string, appointments: Appointment[]): Appointment[] {
   return appointments
-    .filter((a) => a.date === date && (a.status === 'confirmed' || a.status === 'completed'))
+    .filter((a) => a.date === date && (a.status === APPOINTMENT_STATUS.CONFIRMED || a.status === APPOINTMENT_STATUS.COMPLETED))
     .sort((a, b) => a.time.localeCompare(b.time))
 }
 

@@ -1,6 +1,7 @@
 import { CalendarCheck, CheckCircle, DollarSign, Users } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import { formatPrice } from '@/lib/utils'
+import { APPOINTMENT_STATUS } from '@/constants/appointment-status'
 import type { Appointment } from '@/types'
 
 interface StatsCardsProps {
@@ -12,14 +13,14 @@ export function StatsCards({ appointments }: StatsCardsProps) {
   const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
 
   const todayAppointments = appointments.filter(
-    (a) => a.date === today && a.status !== 'cancelled'
+    (a) => a.date === today && a.status !== APPOINTMENT_STATUS.CANCELLED
   )
-  const confirmed = appointments.filter((a) => a.status === 'confirmed')
-  const completed = appointments.filter((a) => a.status === 'completed')
-  const cancelled = appointments.filter((a) => a.status === 'cancelled')
+  const confirmed = appointments.filter((a) => a.status === APPOINTMENT_STATUS.CONFIRMED)
+  const completed = appointments.filter((a) => a.status === APPOINTMENT_STATUS.COMPLETED)
+  const cancelled = appointments.filter((a) => a.status === APPOINTMENT_STATUS.CANCELLED)
 
   const estimatedRevenue = appointments
-    .filter((a) => a.status !== 'cancelled' && a.status !== 'no_show')
+    .filter((a) => a.status !== APPOINTMENT_STATUS.CANCELLED && a.status !== APPOINTMENT_STATUS.NO_SHOW)
     .reduce((sum, a) => sum + a.servicePrice, 0)
 
   const stats = [

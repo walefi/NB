@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from 'react'
 import { collection, query, orderBy, onSnapshot, type DocumentData } from 'firebase/firestore'
 import { db, firebaseReady } from '@/lib/firebase/config'
-import type { Appointment, AppointmentStatus } from '@/types'
+import { APPOINTMENT_STATUS, type AppointmentStatus } from '@/constants/appointment-status'
+import type { Appointment } from '@/types'
 
 interface UseAppointmentsAdminProps {
   dateFilter?: string
@@ -32,7 +33,7 @@ export function useAppointmentsAdmin({
       time: data.time ?? '',
       paymentMethod: data.paymentMethod ?? 'to_combine',
       notes: data.notes ?? undefined,
-      status: data.status ?? 'confirmed',
+      status: data.status ?? APPOINTMENT_STATUS.CONFIRMED,
       createdAt: data.createdAt ?? new Date().toISOString(),
     }
   }
@@ -77,13 +78,13 @@ export function useAppointmentsAdmin({
   const stats = useMemo(() => {
     const now = new Date()
     const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
-    const todayAppointments = filteredAppointments.filter((a) => a.date === today && a.status !== 'cancelled')
-    const confirmed = filteredAppointments.filter((a) => a.status === 'confirmed')
-    const completed = filteredAppointments.filter((a) => a.status === 'completed')
-    const cancelled = filteredAppointments.filter((a) => a.status === 'cancelled')
-    const noShow = filteredAppointments.filter((a) => a.status === 'no_show')
+    const todayAppointments = filteredAppointments.filter((a) => a.date === today && a.status !== APPOINTMENT_STATUS.CANCELLED)
+    const confirmed = filteredAppointments.filter((a) => a.status === APPOINTMENT_STATUS.CONFIRMED)
+    const completed = filteredAppointments.filter((a) => a.status === APPOINTMENT_STATUS.COMPLETED)
+    const cancelled = filteredAppointments.filter((a) => a.status === APPOINTMENT_STATUS.CANCELLED)
+    const noShow = filteredAppointments.filter((a) => a.status === APPOINTMENT_STATUS.NO_SHOW)
     const estimatedRevenue = filteredAppointments
-      .filter((a) => a.status !== 'cancelled' && a.status !== 'no_show')
+      .filter((a) => a.status !== APPOINTMENT_STATUS.CANCELLED && a.status !== APPOINTMENT_STATUS.NO_SHOW)
       .reduce((sum, a) => sum + a.servicePrice, 0)
 
     return {

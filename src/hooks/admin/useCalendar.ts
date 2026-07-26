@@ -3,6 +3,7 @@ import { collection, query, orderBy, onSnapshot, type DocumentData } from 'fireb
 import { db, firebaseReady } from '@/lib/firebase/config'
 import { getBusinessSettings } from '@/lib/firebase/settings'
 import { fetchServices } from '@/lib/firebase/services'
+import { APPOINTMENT_STATUS } from '@/constants/appointment-status'
 import {
   getToday,
   getThisWeekStart,
@@ -13,7 +14,8 @@ import {
   getAppointmentsForDate,
   getWeekDates,
 } from '@/lib/calendar/utils'
-import type { Appointment, AppointmentStatus, BusinessSettings, Service } from '@/types'
+import type { Appointment, BusinessSettings, Service } from '@/types'
+import type { AppointmentStatus } from '@/constants/appointment-status'
 import type { CalendarView } from '@/lib/calendar/utils'
 
 export interface CalendarFilters {
@@ -71,7 +73,7 @@ export function useCalendar() {
           time: d.time ?? '',
           paymentMethod: d.paymentMethod ?? 'to_combine',
           notes: d.notes ?? undefined,
-          status: d.status ?? 'confirmed',
+          status: d.status ?? APPOINTMENT_STATUS.CONFIRMED,
           createdAt: d.createdAt ?? new Date().toISOString(),
         } as Appointment
       })

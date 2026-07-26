@@ -1,18 +1,17 @@
 import { useState } from 'react'
-import { Clock, ChevronDown, ChevronUp, Check, X, Ban, Edit, Calendar as CalendarIcon, Trash2, MessageCircle, Copy } from 'lucide-react'
+import { Clock, ChevronDown, ChevronUp, Check, Ban, Edit, Calendar as CalendarIcon, Trash2, MessageCircle, Copy } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { formatBookingDate, formatPrice } from '@/lib/utils'
 import { STATUS_LABELS, PAYMENT_LABELS } from '@/constants'
+import { APPOINTMENT_STATUS, type AppointmentStatus } from '@/constants/appointment-status'
 import { buildWhatsAppUrl, buildAppointmentMessage } from '@/lib/admin/whatsapp'
-import type { Appointment, AppointmentStatus } from '@/types'
+import type { Appointment } from '@/types'
 
 interface AppointmentListProps {
   appointments: Appointment[]
   loading: boolean
   onUpdateStatus: (id: string, status: AppointmentStatus) => void
-  onConfirm: (id: string) => void
-  onCancel: (id: string) => void
   onComplete: (id: string) => void
   onNoShow: (id: string) => void
   onEdit: (id: string) => void
@@ -21,11 +20,11 @@ interface AppointmentListProps {
 }
 
 const statusColors: Record<string, string> = {
-  pending: 'bg-pink-light dark:bg-pink-dark/20 text-rose dark:text-rose-light',
   confirmed: 'bg-rose-100 dark:bg-rose-dark/30 text-rose-dark dark:text-rose-light',
   completed: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400',
   cancelled: 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400',
   no_show: 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400',
+  deleted: 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400',
 }
 
 function PhoneIcon({ className }: { className?: string }) {
@@ -58,8 +57,6 @@ function copyAppointmentData(apt: Appointment): void {
 export function AppointmentList({
   appointments,
   loading,
-  onConfirm,
-  onCancel,
   onComplete,
   onNoShow,
   onEdit,
@@ -194,28 +191,7 @@ export function AppointmentList({
                     <Copy className="w-3.5 h-3.5" />
                     Copiar
                   </Button>
-                  {apt.status === 'pending' && (
-                    <>
-                      <Button
-                        size="sm"
-                        onClick={() => { onConfirm(apt.id); setExpandedId(null) }}
-                        className="flex items-center gap-1"
-                      >
-                        <Check className="w-3.5 h-3.5" />
-                        Confirmar
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => { onCancel(apt.id); setExpandedId(null) }}
-                        className="flex items-center gap-1"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                        Cancelar
-                      </Button>
-                    </>
-                  )}
-                  {apt.status === 'confirmed' && (
+                  {apt.status === APPOINTMENT_STATUS.CONFIRMED && (
                     <>
                       <Button
                         size="sm"
@@ -254,7 +230,7 @@ export function AppointmentList({
                       </Button>
                     </>
                   )}
-                  {(apt.status === 'completed' || apt.status === 'cancelled' || apt.status === 'no_show') && (
+                  {(apt.status === APPOINTMENT_STATUS.COMPLETED || apt.status === APPOINTMENT_STATUS.CANCELLED || apt.status === APPOINTMENT_STATUS.NO_SHOW || apt.status === APPOINTMENT_STATUS.DELETED) && (
                     <Button
                       size="sm"
                       variant="ghost"

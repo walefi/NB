@@ -15,6 +15,7 @@ import { EditModal } from '@/components/admin/modals/EditModal'
 import { useAppointmentsAdmin } from '@/hooks/admin/useAppointmentsAdmin'
 import { useNotifications } from '@/hooks/admin/useNotifications'
 import { updateAppointmentStatus } from '@/lib/firebase/appointments'
+import { APPOINTMENT_STATUS } from '@/constants/appointment-status'
 import { useAuth } from '@/contexts/AuthContext'
 import { useScrollToTop } from '@/hooks/useScrollToTop'
 import type { ThemeMode, Appointment, AppointmentStatus } from '@/types'
@@ -153,10 +154,8 @@ export function AdminDashboard({ theme, onToggleTheme }: AdminDashboardProps) {
               appointments={appointments}
               loading={loading}
               onUpdateStatus={handleUpdateStatus}
-              onConfirm={(id) => handleUpdateStatus(id, 'confirmed')}
-              onCancel={(id) => handleUpdateStatus(id, 'cancelled')}
-              onComplete={(id) => handleUpdateStatus(id, 'completed')}
-              onNoShow={(id) => handleUpdateStatus(id, 'no_show')}
+              onComplete={(id) => handleUpdateStatus(id, APPOINTMENT_STATUS.COMPLETED)}
+              onNoShow={(id) => handleUpdateStatus(id, APPOINTMENT_STATUS.NO_SHOW)}
               onEdit={(id) => {
                 const apt = appointments.find(a => a.id === id)
                 if (apt) {
