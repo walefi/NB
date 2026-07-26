@@ -1,4 +1,4 @@
-import { CalendarCheck, Clock, CheckCircle, DollarSign, Users } from 'lucide-react'
+import { CalendarCheck, CheckCircle, DollarSign, Users } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import { formatPrice } from '@/lib/utils'
 import type { Appointment } from '@/types'
@@ -14,7 +14,6 @@ export function StatsCards({ appointments }: StatsCardsProps) {
   const todayAppointments = appointments.filter(
     (a) => a.date === today && a.status !== 'cancelled'
   )
-  const pending = appointments.filter((a) => a.status === 'pending')
   const confirmed = appointments.filter((a) => a.status === 'confirmed')
   const completed = appointments.filter((a) => a.status === 'completed')
   const cancelled = appointments.filter((a) => a.status === 'cancelled')
@@ -29,12 +28,6 @@ export function StatsCards({ appointments }: StatsCardsProps) {
       value: todayAppointments.length,
       icon: CalendarCheck,
       color: 'bg-rose-50 dark:bg-rose-dark/20 text-rose dark:text-rose-light',
-    },
-    {
-      label: 'Pendentes',
-      value: pending.length,
-      icon: Clock,
-      color: 'bg-pink-light dark:bg-pink-dark/20 text-rose dark:text-rose-light',
     },
     {
       label: 'Confirmados',
@@ -64,7 +57,7 @@ export function StatsCards({ appointments }: StatsCardsProps) {
   ]
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
       {stats.map((stat) => (
         <Card key={stat.label} className="flex items-start gap-3 p-4">
           <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${stat.color}`}>

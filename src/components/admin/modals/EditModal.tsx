@@ -17,7 +17,7 @@ export function EditModal({ appointment, onClose, onUpdate }: EditModalProps) {
   const [clientName, setClientName] = useState('')
   const [clientPhone, setClientPhone] = useState('')
   const [notes, setNotes] = useState('')
-  const [status, setStatus] = useState<AppointmentStatus>('pending')
+  const [status, setStatus] = useState<AppointmentStatus>('confirmed')
 
   if (!appointment) return null
 

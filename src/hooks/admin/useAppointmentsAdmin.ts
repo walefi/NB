@@ -32,7 +32,7 @@ export function useAppointmentsAdmin({
       time: data.time ?? '',
       paymentMethod: data.paymentMethod ?? 'to_combine',
       notes: data.notes ?? undefined,
-      status: data.status ?? 'pending',
+      status: data.status ?? 'confirmed',
       createdAt: data.createdAt ?? new Date().toISOString(),
     }
   }
@@ -78,7 +78,6 @@ export function useAppointmentsAdmin({
     const now = new Date()
     const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
     const todayAppointments = filteredAppointments.filter((a) => a.date === today && a.status !== 'cancelled')
-    const pending = filteredAppointments.filter((a) => a.status === 'pending')
     const confirmed = filteredAppointments.filter((a) => a.status === 'confirmed')
     const completed = filteredAppointments.filter((a) => a.status === 'completed')
     const cancelled = filteredAppointments.filter((a) => a.status === 'cancelled')
@@ -90,7 +89,6 @@ export function useAppointmentsAdmin({
     return {
       total: filteredAppointments.length,
       today: todayAppointments.length,
-      pending,
       confirmed,
       completed,
       cancelled,

@@ -16,6 +16,7 @@ export type AppointmentStatus =
   | 'cancelled'
   | 'completed'
   | 'no_show'
+  | 'deleted'
 
 export type PaymentMethod = 'pix' | 'card' | 'cash' | 'to_combine'
 

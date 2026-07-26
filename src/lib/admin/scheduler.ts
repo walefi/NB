@@ -55,7 +55,7 @@ function getMinutesUntil(dateStr: string, timeStr: string): number {
 
 export async function checkAndSendReminders(appointments: Appointment[]): Promise<void> {
   const activeAppointments = appointments.filter(
-    (a) => a.status === 'confirmed' || a.status === 'pending'
+    (a) => a.status === 'confirmed'
   )
 
   for (const apt of activeAppointments) {

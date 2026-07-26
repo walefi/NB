@@ -61,7 +61,7 @@ export function useAvailableSlots(
           time: d.time ?? '',
           paymentMethod: d.paymentMethod ?? 'to_combine',
           notes: d.notes ?? undefined,
-          status: d.status ?? 'pending',
+          status: d.status ?? 'confirmed',
           createdAt: d.createdAt ?? new Date().toISOString(),
         } as Appointment
       })

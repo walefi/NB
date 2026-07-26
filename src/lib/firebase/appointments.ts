@@ -28,7 +28,8 @@ function hasOverlap(
   const newStart = timeToMinutes(time)
   const newEnd = newStart + serviceDuration
   return appointments.some((a) => {
-    if (a.date !== date || a.status === 'cancelled') return false
+    if (a.date !== date) return false
+    if (a.status !== 'confirmed' && a.status !== 'completed') return false
     const aStart = timeToMinutes(a.time)
     const aEnd = aStart + a.serviceDuration
     return newStart < aEnd && newEnd > aStart
@@ -119,7 +120,7 @@ export async function createAppointment(
   const appointment: Appointment = {
     ...data,
     id: crypto.randomUUID(),
-    status: 'pending',
+    status: 'confirmed',
     createdAt: new Date().toISOString(),
   }
 
@@ -155,6 +156,14 @@ export async function createAppointment(
   }
 
   try {
+    const freshCheck = await checkSlotAvailability(data.date, data.time, data.serviceDuration)
+    if (!freshCheck.available) {
+      throw new AppointmentsError(
+        'Este horario acabou de ser reservado. Por favor, escolha outro horario.',
+        'SLOT_TAKEN'
+      )
+    }
+
     const docRef = await addDoc(collection(db, 'appointments'), {
       serviceId: data.serviceId,
       serviceName: data.serviceName,
@@ -166,7 +175,7 @@ export async function createAppointment(
       time: data.time,
       paymentMethod: data.paymentMethod,
       notes: data.notes ?? null,
-      status: 'pending',
+      status: 'confirmed',
       createdAt: new Date().toISOString(),
     })
 

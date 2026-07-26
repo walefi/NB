@@ -36,8 +36,9 @@ export function getStatusColor(status: AppointmentStatus): string {
     cancelled: 'bg-red-100 border-red-400 text-red-800 dark:bg-red-900/30 dark:border-red-600 dark:text-red-300',
     completed: 'bg-blue-100 border-blue-400 text-blue-800 dark:bg-blue-900/30 dark:border-blue-600 dark:text-blue-300',
     no_show: 'bg-gray-100 border-gray-400 text-gray-800 dark:bg-gray-800/30 dark:border-gray-500 dark:text-gray-300',
+    deleted: 'bg-gray-100 border-gray-400 text-gray-800 dark:bg-gray-800/30 dark:border-gray-500 dark:text-gray-300',
   }
-  return colors[status] || colors.pending
+  return colors[status] || colors.confirmed
 }
 
 export function getStatusBg(status: AppointmentStatus): string {
@@ -47,8 +48,9 @@ export function getStatusBg(status: AppointmentStatus): string {
     cancelled: 'border-l-red-400 bg-red-50 dark:bg-red-900/20',
     completed: 'border-l-blue-400 bg-blue-50 dark:bg-blue-900/20',
     no_show: 'border-l-gray-400 bg-gray-50 dark:bg-gray-800/20',
+    deleted: 'border-l-gray-400 bg-gray-50 dark:bg-gray-800/20',
   }
-  return colors[status] || colors.pending
+  return colors[status] || colors.confirmed
 }
 
 export function getStatusDot(status: AppointmentStatus): string {
@@ -58,8 +60,9 @@ export function getStatusDot(status: AppointmentStatus): string {
     cancelled: 'bg-red-400',
     completed: 'bg-blue-400',
     no_show: 'bg-gray-400',
+    deleted: 'bg-gray-400',
   }
-  return dots[status] || dots.pending
+  return dots[status] || dots.confirmed
 }
 
 export function getStatusLabel(status: AppointmentStatus): string {
@@ -69,6 +72,7 @@ export function getStatusLabel(status: AppointmentStatus): string {
     cancelled: 'Cancelado',
     completed: 'Concluido',
     no_show: 'Nao compareceu',
+    deleted: 'Excluido',
   }
   return labels[status] || status
 }
@@ -117,18 +121,18 @@ export function isSlotAvailable(date: string, time: string, settings: BusinessSe
   if (settings?.breaks && isBreakTime(time, settings.breaks)) return false
 
   const hasConflict = appointments.some(
-    (a) => a.date === date && a.time === time && a.status !== 'cancelled'
+    (a) => a.date === date && a.time === time && (a.status === 'confirmed' || a.status === 'completed')
   )
   return !hasConflict
 }
 
 export function getAppointmentsForSlot(date: string, time: string, appointments: Appointment[]): Appointment[] {
-  return appointments.filter((a) => a.date === date && a.time === time && a.status !== 'cancelled')
+  return appointments.filter((a) => a.date === date && a.time === time && (a.status === 'confirmed' || a.status === 'completed'))
 }
 
 export function getAppointmentsForDate(date: string, appointments: Appointment[]): Appointment[] {
   return appointments
-    .filter((a) => a.date === date && a.status !== 'cancelled')
+    .filter((a) => a.date === date && (a.status === 'confirmed' || a.status === 'completed'))
     .sort((a, b) => a.time.localeCompare(b.time))
 }
 

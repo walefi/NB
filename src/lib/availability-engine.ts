@@ -53,7 +53,7 @@ function hasOverlap(
 
   return appointments.some((a) => {
     if (a.date !== date) return false
-    if (a.status === 'cancelled') return false
+    if (a.status !== 'confirmed' && a.status !== 'completed') return false
     const aStart = timeToMinutes(a.time)
     const aEnd = aStart + a.serviceDuration
     return newStart < aEnd && newEnd > aStart

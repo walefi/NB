@@ -61,6 +61,7 @@ export const STATUS_LABELS: Record<string, string> = {
   cancelled: 'Cancelado',
   completed: 'Concluido',
   no_show: 'Nao compareceu',
+  deleted: 'Excluido',
 }
 
 export const BUSINESS_HOURS = {
