@@ -2,6 +2,7 @@ import * as admin from 'firebase-admin'
 import { onDocumentCreated, onDocumentUpdated } from 'firebase-functions/v2/firestore'
 import { onSchedule } from 'firebase-functions/v2/scheduler'
 import { sendWhatsAppNotification, processRetryQueue } from './notifications/service'
+import { sendPushToAdmins } from './notifications/fcm'
 
 admin.initializeApp()
 
@@ -50,6 +51,7 @@ export const onAppointmentCreated = onDocumentCreated(
     console.log(`New appointment: ${appointment.id} from ${appointment.clientName}`)
 
     await sendWhatsAppNotification(appointment, 'new_appointment')
+    await sendPushToAdmins(appointment, 'new_appointment')
   }
 )
 
@@ -76,20 +78,24 @@ export const onAppointmentStatusChanged = onDocumentUpdated(
     switch (newStatus) {
       case 'confirmed':
         await sendWhatsAppNotification(appointment, 'confirmed')
+        await sendPushToAdmins(appointment, 'confirmed')
         break
       case 'cancelled':
         await sendWhatsAppNotification(appointment, 'cancelled')
+        await sendPushToAdmins(appointment, 'cancelled')
         break
       case 'completed':
-        // No WhatsApp for completed
         break
     }
 
-    // Check if date/time changed (reschedule)
     const oldDate = before.date as string
     const oldTime = before.time as string
     if (appointment.date !== oldDate || appointment.time !== oldTime) {
       await sendWhatsAppNotification(appointment, 'rescheduled', {
+        newDate: appointment.date,
+        newTime: appointment.time,
+      })
+      await sendPushToAdmins(appointment, 'rescheduled', {
         newDate: appointment.date,
         newTime: appointment.time,
       })

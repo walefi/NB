@@ -163,3 +163,13 @@ export interface BusinessSettings {
   createdAt: string
   updatedAt: string
 }
+
+export interface FCMToken {
+  id: string
+  uid: string
+  token: string
+  device: string
+  browser: string
+  createdAt: string
+  updatedAt: string
+}

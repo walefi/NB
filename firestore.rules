@@ -44,6 +44,12 @@ service cloud.firestore {
       allow read, write: if request.auth != null;
     }
 
+    // Admin FCM tokens: admin only
+    match /adminTokens/{tokenId} {
+      allow create, update, delete: if request.auth != null;
+      allow read: if request.auth != null;
+    }
+
     // Deny everything else
     match /{document=**} {
       allow read, write: if false;

@@ -170,11 +170,89 @@ match /notifications/{notificationId} {
 }
 ```
 
+## Firebase Cloud Messaging (FCM)
+
+Push notifications em tempo real para o administrador do sistema.
+
+### Arquitetura
+
+```
+Cliente (React)
+  → notification-service.ts   (permissao + token)
+  → fcm-provider.ts           (abstracao + teste)
+  → useFCM.ts                 (hook React)
+      ↓
+Firestore: adminTokens/{uid}
+  {uid, token, device, browser, createdAt, updatedAt}
+      ↓
+Cloud Functions: sendPushToAdmins()
+  → Firebase Admin SDK → messaging.sendEach()
+      ↓
+Celular / Navegador (push notification)
+```
+
+### Colecao adminTokens
+
+| Campo     | Tipo      | Descricao                        |
+|-----------|-----------|----------------------------------|
+| uid       | string    | UID do admin logado              |
+| token     | string    | FCM token do dispositivo         |
+| device    | string    | Desktop / Mobile / Tablet        |
+| browser   | string    | Chrome / Firefox / Safari / Edge |
+| createdAt | Timestamp | Data de criacao                  |
+| updatedAt | Timestamp | Data de atualizacao              |
+
+### Mensagens Push
+
+| Evento             | Titulo                     | Corpo                                                    |
+|-------------------|----------------------------|----------------------------------------------------------|
+| new_appointment   | 💅 Novo Agendamento       | {client} agendou {servico} as {horario}.                 |
+| confirmed         | ✅ Agendamento Confirmado  | {servico} para {data} as {horario}.                      |
+| cancelled         | ❌ Agendamento Cancelado   | {servico} para {data} as {horario}.                      |
+| rescheduled       | 📅 Agendamento Reagendado | {servico} reagendado para {novaData} as {novoHorario}.   |
+
+### Como Ativar o FCM
+
+1. **Firebase Console** → Project Settings → Cloud Messaging → Web Push certificates
+2. Gerar chave VAPID
+3. Adicionar `VITE_FIREBASE_VAPID_KEY` ao `.env`
+4. No app do admin, clicar no icone de sino "Ativar notificações" no header
+5. Aceitar a permissão do navegador
+6. O token sera salvo automaticamente em `adminTokens`
+
+### Como Publicar as Functions
+
+```bash
+cd functions
+npm run build
+cd ..
+firebase deploy --only functions
+```
+
+### Como Testar
+
+1. Abrir `/admin/dashboard` como admin logado
+2. Clicar no icone de sino "Ativar notificacoes" no header
+3. Aceitar permissão do navegador
+4. Criar um agendamento pelo site público (`/`)
+5. Verificar se a push notification aparece no navegador/celular do admin
+6. Testar confirmacao, cancelamento e reagendamento
+
+### Arquivos FCM
+
+| Arquivo                               | Descricao                          |
+|---------------------------------------|------------------------------------|
+| public/firebase-messaging-sw.js       | Service Worker (background push)   |
+| src/lib/firebase/messaging.ts         | Inicializacao FCM                  |
+| src/lib/firebase/notification-service.ts | Permissao + token + Firestore   |
+| src/lib/admin/fcm-provider.ts         | Abstracao + teste local            |
+| src/hooks/admin/useFCM.ts             | Hook React                         |
+| functions/src/notifications/fcm.ts     | sendPushToAdmins()                 |
+
 ## Pendencias
 
 - Integrar Firebase Authentication (substituir login temporario)
 - Configurar envio real de e-mails
-- Implementar push notifications (FCM)
 - Dashboard de analytics de notificacoes
 - Exportacao de notificacoes
 - Notificacoes por SMS

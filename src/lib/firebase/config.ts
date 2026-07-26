@@ -2,6 +2,7 @@ import { initializeApp, type FirebaseApp } from 'firebase/app'
 import { getFirestore, type Firestore } from 'firebase/firestore'
 import { getAuth, type Auth } from 'firebase/auth'
 import { getStorage, type FirebaseStorage } from 'firebase/storage'
+import { getMessaging, type Messaging } from 'firebase/messaging'
 
 const requiredEnvVars = [
   'VITE_FIREBASE_API_KEY',
@@ -34,6 +35,7 @@ let app: FirebaseApp
 let db: Firestore | null = null
 let auth: Auth | null = null
 let storage: FirebaseStorage | null = null
+let messaging: Messaging | null = null
 let firebaseReady = false
 let initError: string | null = null
 
@@ -43,6 +45,11 @@ try {
     db = getFirestore(app)
     auth = getAuth(app)
     storage = getStorage(app)
+    try {
+      messaging = getMessaging(app)
+    } catch {
+      // FCM may not be available in all environments
+    }
     firebaseReady = true
   }
 } catch (err) {
@@ -50,4 +57,4 @@ try {
   firebaseReady = false
 }
 
-export { app, db, auth, storage, firebaseReady, isConfigured, initError }
+export { app, db, auth, storage, messaging, firebaseReady, isConfigured, initError }
