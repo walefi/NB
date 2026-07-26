@@ -59,22 +59,32 @@ export function useCalendar() {
     )
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map((doc: DocumentData) => {
-        const d = doc.data()
+      const data = snapshot.docs.map((docSnapshot: DocumentData) => {
+        const d = docSnapshot.data()
+        const time = d.time ?? d.startTime ?? ''
+        const duration = d.serviceDuration ?? 60
+        const [h, m] = time.split(':').map(Number)
+        const endTotal = h * 60 + m + duration
+        const endTime = d.endTime ?? `${String(Math.floor(endTotal / 60)).padStart(2, '0')}:${String(endTotal % 60).padStart(2, '0')}`
         return {
-          id: doc.id,
+          id: docSnapshot.id,
           serviceId: d.serviceId ?? '',
           serviceName: d.serviceName ?? '',
           servicePrice: d.servicePrice ?? 0,
-          serviceDuration: d.serviceDuration ?? 60,
+          serviceDuration: duration,
           clientName: d.clientName ?? '',
           clientPhone: d.clientPhone ?? '',
+          clientEmail: d.clientEmail ?? undefined,
           date: d.date ?? '',
-          time: d.time ?? '',
+          time,
+          startTime: d.startTime ?? time,
+          endTime,
           paymentMethod: d.paymentMethod ?? 'to_combine',
+          paymentStatus: d.paymentStatus ?? 'pending',
           notes: d.notes ?? undefined,
           status: d.status ?? APPOINTMENT_STATUS.CONFIRMED,
           createdAt: d.createdAt ?? new Date().toISOString(),
+          updatedAt: d.updatedAt ?? undefined,
         } as Appointment
       })
       setAppointments(data)
@@ -88,6 +98,8 @@ export function useCalendar() {
 
   const filteredAppointments = useMemo(() => {
     return appointments.filter((apt) => {
+      if (apt.status === APPOINTMENT_STATUS.CANCELLED) return false
+      if (apt.status === APPOINTMENT_STATUS.DELETED) return false
       if (filters.status !== 'all' && apt.status !== filters.status) return false
       if (filters.serviceId && apt.serviceId !== filters.serviceId) return false
       if (filters.searchQuery) {

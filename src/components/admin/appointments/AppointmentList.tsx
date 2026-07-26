@@ -3,6 +3,7 @@ import { Clock, ChevronDown, ChevronUp, Check, Ban, Edit, Calendar as CalendarIc
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { formatBookingDate, formatPrice } from '@/lib/utils'
+import { formatTimeRange } from '@/lib/calendar/utils'
 import { STATUS_LABELS, PAYMENT_LABELS } from '@/constants'
 import { APPOINTMENT_STATUS, type AppointmentStatus } from '@/constants/appointment-status'
 import { buildWhatsAppUrl, buildAppointmentMessage } from '@/lib/admin/whatsapp'
@@ -42,14 +43,19 @@ function openAppointmentWhatsApp(apt: Appointment): void {
 }
 
 function copyAppointmentData(apt: Appointment): void {
+  const endTime = formatTimeRange(apt.time, apt.serviceDuration).split(' - ')[1]
   const text = [
     `Nome: ${apt.clientName}`,
     `Telefone: ${apt.clientPhone}`,
     `Servico: ${apt.serviceName}`,
+    `Valor: ${formatPrice(apt.servicePrice)}`,
+    `Duracao: ${apt.serviceDuration}min`,
     `Data: ${formatBookingDate(apt.date)}`,
-    `Hora: ${apt.time}`,
+    `Hora: ${apt.time} - ${endTime}`,
     `Pagamento: ${PAYMENT_LABELS[apt.paymentMethod] || apt.paymentMethod}`,
-  ].join('\n')
+    apt.notes ? `Obs: ${apt.notes}` : '',
+    `Status: ${STATUS_LABELS[apt.status]}`,
+  ].filter(Boolean).join('\n')
 
   navigator.clipboard.writeText(text).catch(() => {})
 }
@@ -151,6 +157,10 @@ export function AppointmentList({
                     <p className="font-medium text-black dark:text-white">{apt.serviceName}</p>
                   </div>
                   <div>
+                    <p className="text-xs text-black/50 dark:text-white/50">Valor</p>
+                    <p className="font-medium text-black dark:text-white">{formatPrice(apt.servicePrice)}</p>
+                  </div>
+                  <div>
                     <p className="text-xs text-black/50 dark:text-white/50">Duracao</p>
                     <p className="font-medium text-black dark:text-white">{apt.serviceDuration}min</p>
                   </div>
@@ -159,9 +169,29 @@ export function AppointmentList({
                     <p className="font-medium text-black dark:text-white">{formatBookingDate(apt.date)}</p>
                   </div>
                   <div>
+                    <p className="text-xs text-black/50 dark:text-white/50">Horario</p>
+                    <p className="font-medium text-black dark:text-white">{formatTimeRange(apt.time, apt.serviceDuration)}</p>
+                  </div>
+                  <div>
                     <p className="text-xs text-black/50 dark:text-white/50">Pagamento</p>
                     <p className="font-medium text-black dark:text-white">
                       {PAYMENT_LABELS[apt.paymentMethod] || apt.paymentMethod}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-black/50 dark:text-white/50">Status</p>
+                    <p className="font-medium text-black dark:text-white">{STATUS_LABELS[apt.status]}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-black/50 dark:text-white/50">Criado em</p>
+                    <p className="font-medium text-black dark:text-white">
+                      {(() => {
+                        try {
+                          return new Date(apt.createdAt).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                        } catch {
+                          return apt.createdAt
+                        }
+                      })()}
                     </p>
                   </div>
                   {apt.notes && (
@@ -180,7 +210,7 @@ export function AppointmentList({
                     className="flex items-center gap-1 text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20"
                   >
                     <MessageCircle className="w-3.5 h-3.5" />
-                    WhatsApp
+                    Conversar
                   </Button>
                   <Button
                     size="sm"

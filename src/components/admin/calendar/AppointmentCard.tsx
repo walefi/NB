@@ -60,6 +60,8 @@ export const AppointmentCard = memo(function AppointmentCard({
               <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
                 appointment.status === APPOINTMENT_STATUS.CONFIRMED ? 'bg-green-200 text-green-800 dark:bg-green-800/40 dark:text-green-300' :
                 appointment.status === APPOINTMENT_STATUS.COMPLETED ? 'bg-blue-200 text-blue-800 dark:bg-blue-800/40 dark:text-blue-300' :
+                appointment.status === APPOINTMENT_STATUS.CANCELLED ? 'bg-red-200 text-red-800 dark:bg-red-800/40 dark:text-red-300' :
+                appointment.status === APPOINTMENT_STATUS.DELETED ? 'bg-gray-300 text-gray-600 dark:bg-gray-600/40 dark:text-gray-400 line-through' :
                 'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
               }`}>
                 {getStatusLabel(appointment.status)}

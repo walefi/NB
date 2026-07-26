@@ -21,6 +21,9 @@ import { useScrollToTop } from '@/hooks/useScrollToTop'
 import type { ThemeMode, Appointment, AppointmentStatus } from '@/types'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
+import { useEffect } from 'react'
+import { fetchServices } from '@/lib/firebase/services'
+import type { Service } from '@/types'
 
 interface AdminDashboardProps {
   theme: ThemeMode
@@ -35,15 +38,22 @@ export function AdminDashboard({ theme, onToggleTheme }: AdminDashboardProps) {
   const [dateFilter, setDateFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState<AppointmentStatus | 'all'>('all')
   const [searchQuery, setSearchQuery] = useState('')
+  const [serviceFilter, setServiceFilter] = useState('')
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null)
   const [rescheduleModalOpen, setRescheduleModalOpen] = useState(false)
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [services, setServices] = useState<Service[]>([])
+
+  useEffect(() => {
+    fetchServices().then(setServices).catch(() => {})
+  }, [])
 
   const { appointments, loading } = useAppointmentsAdmin({
     dateFilter: dateFilter || undefined,
     statusFilter,
     searchQuery,
+    serviceFilter,
   })
 
   const { unreadCount, todayNotifications } = useNotifications()
@@ -149,6 +159,9 @@ export function AdminDashboard({ theme, onToggleTheme }: AdminDashboardProps) {
               onStatusFilterChange={setStatusFilter}
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
+              serviceFilter={serviceFilter}
+              onServiceFilterChange={setServiceFilter}
+              services={services}
             />
             <AppointmentList
               appointments={appointments}

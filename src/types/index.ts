@@ -16,6 +16,8 @@ export type AppointmentStatus = AppointmentStatusBase
 
 export type PaymentMethod = 'pix' | 'card' | 'cash' | 'to_combine'
 
+export type PaymentStatus = 'pending' | 'paid' | 'refunded'
+
 export interface Appointment {
   id: string
   serviceId: string
@@ -24,12 +26,17 @@ export interface Appointment {
   serviceDuration: number
   clientName: string
   clientPhone: string
+  clientEmail?: string
   date: string
   time: string
+  startTime?: string
+  endTime?: string
   paymentMethod: PaymentMethod
+  paymentStatus?: PaymentStatus
   notes?: string
   status: AppointmentStatus
   createdAt: string
+  updatedAt?: string
 }
 
 export interface BookingFormData {
@@ -38,6 +45,7 @@ export interface BookingFormData {
   time: string
   clientName: string
   clientPhone: string
+  clientEmail?: string
   paymentMethod: PaymentMethod
   notes: string
 }
@@ -55,6 +63,7 @@ export interface ConfirmedData {
   time: string
   clientName: string
   clientPhone: string
+  clientEmail?: string
   paymentMethod: PaymentMethod
 }
 

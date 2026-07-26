@@ -129,7 +129,7 @@ export const AppointmentDrawer = memo(function AppointmentDrawer({
                 <Clock className="w-5 h-5 text-rose shrink-0" />
                 <div>
                   <p className="text-sm font-medium text-black dark:text-white">
-                    {appointment.time} ({appointment.serviceDuration}min)
+                    {appointment.time} - {appointment.endTime} ({appointment.serviceDuration}min)
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">Horario e Duracao</p>
                 </div>
@@ -213,7 +213,7 @@ export const AppointmentDrawer = memo(function AppointmentDrawer({
                 className="flex-1 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20"
               >
                 <MessageCircle className="w-4 h-4" />
-                WhatsApp
+                Conversar
               </Button>
               <Button
                 variant="ghost"

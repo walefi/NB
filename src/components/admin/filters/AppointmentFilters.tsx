@@ -1,5 +1,6 @@
 import { APPOINTMENT_STATUS } from '@/constants/appointment-status'
 import type { AppointmentStatus } from '@/constants/appointment-status'
+import type { Service } from '@/types'
 
 interface AppointmentFiltersProps {
   dateFilter: string
@@ -8,6 +9,9 @@ interface AppointmentFiltersProps {
   onStatusFilterChange: (value: AppointmentStatus | 'all') => void
   searchQuery: string
   onSearchChange: (value: string) => void
+  serviceFilter?: string
+  onServiceFilterChange?: (value: string) => void
+  services?: Service[]
 }
 
 const dateOptions = [
@@ -24,6 +28,9 @@ export function AppointmentFilters({
   onStatusFilterChange,
   searchQuery,
   onSearchChange,
+  serviceFilter = '',
+  onServiceFilterChange,
+  services = [],
 }: AppointmentFiltersProps) {
   const statusOptions: { value: AppointmentStatus | 'all'; label: string }[] = [
     { value: 'all', label: 'Todos' },
@@ -84,6 +91,21 @@ export function AppointmentFilters({
             </option>
           ))}
         </select>
+
+        {services.length > 0 && onServiceFilterChange && (
+          <select
+            value={serviceFilter}
+            onChange={(e) => onServiceFilterChange(e.target.value)}
+            className="pl-3 pr-10 py-2 rounded-xl border-2 border-rose-100 dark:border-rose-dark/30 bg-white dark:bg-black text-black dark:text-white text-sm focus:border-rose dark:focus:border-rose-light focus:ring-2 focus:ring-rose/10 dark:focus:ring-rose/20 outline-none transition-all appearance-none"
+          >
+            <option value="" className="bg-white dark:bg-black">Todos servicos</option>
+            {services.filter((s) => s.isActive).map((s) => (
+              <option key={s.id} value={s.id} className="bg-white dark:bg-black">
+                {s.name}
+              </option>
+            ))}
+          </select>
+        )}
 
         <div className="relative flex-1">
           <input

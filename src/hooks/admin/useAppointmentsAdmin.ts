@@ -8,33 +8,45 @@ interface UseAppointmentsAdminProps {
   dateFilter?: string
   statusFilter?: AppointmentStatus | 'all'
   searchQuery?: string
+  serviceFilter?: string
 }
 
 export function useAppointmentsAdmin({
   dateFilter,
   statusFilter,
   searchQuery,
+  serviceFilter,
 }: UseAppointmentsAdminProps = {}) {
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const mapDoc = (doc: DocumentData, id: string): Appointment => {
-    const data = doc.data?.() ?? doc
+  const mapDoc = (docData: DocumentData, id: string): Appointment => {
+    const data = docData.data?.() ?? docData
+    const time = data.time ?? data.startTime ?? ''
+    const duration = data.serviceDuration ?? 60
+    const [h, m] = time.split(':').map(Number)
+    const endTotal = h * 60 + m + duration
+    const endTime = data.endTime ?? `${String(Math.floor(endTotal / 60)).padStart(2, '0')}:${String(endTotal % 60).padStart(2, '0')}`
     return {
       id,
       serviceId: data.serviceId ?? '',
       serviceName: data.serviceName ?? '',
       servicePrice: data.servicePrice ?? 0,
-      serviceDuration: data.serviceDuration ?? 60,
+      serviceDuration: duration,
       clientName: data.clientName ?? '',
       clientPhone: data.clientPhone ?? '',
+      clientEmail: data.clientEmail ?? undefined,
       date: data.date ?? '',
-      time: data.time ?? '',
+      time,
+      startTime: data.startTime ?? time,
+      endTime,
       paymentMethod: data.paymentMethod ?? 'to_combine',
+      paymentStatus: data.paymentStatus ?? 'pending',
       notes: data.notes ?? undefined,
       status: data.status ?? APPOINTMENT_STATUS.CONFIRMED,
       createdAt: data.createdAt ?? new Date().toISOString(),
+      updatedAt: data.updatedAt ?? undefined,
     }
   }
 
@@ -66,6 +78,7 @@ export function useAppointmentsAdmin({
     return appointments.filter((apt) => {
       if (dateFilter && apt.date !== dateFilter) return false
       if (statusFilter && statusFilter !== 'all' && apt.status !== statusFilter) return false
+      if (serviceFilter && apt.serviceId !== serviceFilter) return false
       if (searchQuery) {
         const q = searchQuery.toLowerCase()
         if (!apt.clientName.toLowerCase().includes(q)) return false
@@ -73,7 +86,7 @@ export function useAppointmentsAdmin({
       }
       return true
     })
-  }, [appointments, dateFilter, statusFilter, searchQuery])
+  }, [appointments, dateFilter, statusFilter, searchQuery, serviceFilter])
 
   const stats = useMemo(() => {
     const now = new Date()
@@ -84,7 +97,7 @@ export function useAppointmentsAdmin({
     const cancelled = filteredAppointments.filter((a) => a.status === APPOINTMENT_STATUS.CANCELLED)
     const noShow = filteredAppointments.filter((a) => a.status === APPOINTMENT_STATUS.NO_SHOW)
     const estimatedRevenue = filteredAppointments
-      .filter((a) => a.status !== APPOINTMENT_STATUS.CANCELLED && a.status !== APPOINTMENT_STATUS.NO_SHOW)
+      .filter((a) => a.status === APPOINTMENT_STATUS.COMPLETED)
       .reduce((sum, a) => sum + a.servicePrice, 0)
 
     return {

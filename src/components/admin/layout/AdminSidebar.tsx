@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Menu, X, Calendar as CalendarIcon, Home, BarChart3, LogOut, Bell, Settings } from 'lucide-react'
+import { Menu, X, Calendar as CalendarIcon, Home, BarChart3, LogOut, Bell, Settings, History } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { useAuth } from '@/contexts/AuthContext'
 import type { ThemeMode } from '@/types'
@@ -25,6 +25,7 @@ export function AdminSidebar(_props: AdminSidebarProps) {
     { href: '/admin/appointments', label: 'Agendamentos', icon: CalendarIcon },
     { href: '/admin/notifications', label: 'Notificacoes', icon: Bell },
     { href: '/admin/calendar', label: 'Calendario', icon: CalendarIcon },
+    { href: '/admin/history', label: 'Historico', icon: History },
     { href: '/admin/stats', label: 'Estatisticas', icon: BarChart3 },
     { href: '/admin/settings', label: 'Configuracoes', icon: Settings },
   ]

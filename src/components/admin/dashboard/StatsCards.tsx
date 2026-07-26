@@ -20,7 +20,7 @@ export function StatsCards({ appointments }: StatsCardsProps) {
   const cancelled = appointments.filter((a) => a.status === APPOINTMENT_STATUS.CANCELLED)
 
   const estimatedRevenue = appointments
-    .filter((a) => a.status !== APPOINTMENT_STATUS.CANCELLED && a.status !== APPOINTMENT_STATUS.NO_SHOW)
+    .filter((a) => a.status === APPOINTMENT_STATUS.COMPLETED)
     .reduce((sum, a) => sum + a.servicePrice, 0)
 
   const stats = [

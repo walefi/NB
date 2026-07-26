@@ -8,6 +8,8 @@ import { AdminDashboard } from '@/pages/admin-dashboard'
 import { AdminNotifications } from '@/pages/admin-notifications'
 import { AdminSettings } from '@/pages/admin-settings'
 import { AdminCalendar } from '@/pages/admin-calendar'
+import { AdminAppointments } from '@/pages/admin-appointments'
+import { AdminHistory } from '@/pages/admin-history'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { currentUser, loading } = useAuth()
@@ -64,12 +66,17 @@ function AppRoutes() {
       } />
       <Route path="/admin/appointments" element={
         <ProtectedRoute>
-          <AdminDashboard theme={theme} onToggleTheme={toggleTheme} />
+          <AdminAppointments theme={theme} onToggleTheme={toggleTheme} />
         </ProtectedRoute>
       } />
       <Route path="/admin/calendar" element={
         <ProtectedRoute>
           <AdminCalendar theme={theme} onToggleTheme={toggleTheme} />
+        </ProtectedRoute>
+      } />
+      <Route path="/admin/history" element={
+        <ProtectedRoute>
+          <AdminHistory theme={theme} onToggleTheme={toggleTheme} />
         </ProtectedRoute>
       } />
       <Route path="/admin/stats" element={

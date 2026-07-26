@@ -1,12 +1,12 @@
 import {
   collection,
-  addDoc,
   getDocs,
   query,
   where,
   orderBy,
   doc,
   updateDoc,
+  runTransaction,
   type DocumentData,
   type FirestoreError,
 } from 'firebase/firestore'
@@ -77,22 +77,35 @@ function saveLocalAppointments(appointments: Appointment[]): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(appointments))
 }
 
-function mapApptDoc(doc: DocumentData, id: string): Appointment {
-  const data = doc.data?.() ?? doc
+function computeEndTime(time: string, duration: number): string {
+  const [h, m] = time.split(':').map(Number)
+  const total = h * 60 + m + duration
+  return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`
+}
+
+function mapApptDoc(docData: DocumentData, id: string): Appointment {
+  const data = docData.data?.() ?? docData
+  const time = data.time ?? data.startTime ?? ''
+  const duration = data.serviceDuration ?? 60
   return {
     id,
     serviceId: data.serviceId ?? '',
     serviceName: data.serviceName ?? '',
     servicePrice: data.servicePrice ?? 0,
-    serviceDuration: data.serviceDuration ?? 60,
+    serviceDuration: duration,
     clientName: data.clientName ?? '',
     clientPhone: data.clientPhone ?? '',
+    clientEmail: data.clientEmail ?? undefined,
     date: data.date ?? '',
-    time: data.time ?? '',
+    time,
+    startTime: data.startTime ?? time,
+    endTime: data.endTime ?? computeEndTime(time, duration),
     paymentMethod: data.paymentMethod ?? 'to_combine',
+    paymentStatus: data.paymentStatus ?? 'pending',
     notes: data.notes ?? undefined,
     status: data.status ?? APPOINTMENT_STATUS.CONFIRMED,
     createdAt: data.createdAt ?? new Date().toISOString(),
+    updatedAt: data.updatedAt ?? undefined,
   }
 }
 
@@ -110,26 +123,18 @@ export async function checkSlotAvailability(
 export async function createAppointment(
   data: Omit<Appointment, 'id' | 'status' | 'createdAt'>
 ): Promise<Appointment> {
-  const availability = await checkSlotAvailability(data.date, data.time, data.serviceDuration)
-  if (!availability.available) {
-    throw new AppointmentsError(
-      'Este horario acabou de ser reservado. Por favor, escolha outro horario.',
-      'SLOT_TAKEN'
-    )
-  }
-
-  const appointment: Appointment = {
-    ...data,
-    id: crypto.randomUUID(),
-    status: APPOINTMENT_STATUS.CONFIRMED,
-    createdAt: new Date().toISOString(),
-  }
-
   if (!firebaseReady || !db) {
+    const appointment: Appointment = {
+      ...data,
+      id: crypto.randomUUID(),
+      status: APPOINTMENT_STATUS.CONFIRMED,
+      createdAt: new Date().toISOString(),
+    }
+
     const all = getLocalAppointments()
     if (hasOverlap(data.date, data.time, data.serviceDuration, all)) {
       throw new AppointmentsError(
-        'Este horario acabou de ser reservado. Por favor, escolha outro horario.',
+        'Este horário acabou de ser reservado por outro cliente. Escolha outro horário.',
         'SLOT_TAKEN'
       )
     }
@@ -157,27 +162,47 @@ export async function createAppointment(
   }
 
   try {
-    const freshCheck = await checkSlotAvailability(data.date, data.time, data.serviceDuration)
-    if (!freshCheck.available) {
-      throw new AppointmentsError(
-        'Este horario acabou de ser reservado. Por favor, escolha outro horario.',
-        'SLOT_TAKEN'
+    const firestore = db!
+    const now = new Date().toISOString()
+    const endTime = computeEndTime(data.time, data.serviceDuration)
+    const docRef = await runTransaction(firestore, async (transaction) => {
+      const q = query(
+        collection(firestore, 'appointments'),
+        where('date', '==', data.date),
+        orderBy('time', 'asc')
       )
-    }
+      const snapshot = await getDocs(q)
+      const existingAppointments = snapshot.docs.map((d) => mapApptDoc(d, d.id))
 
-    const docRef = await addDoc(collection(db, 'appointments'), {
-      serviceId: data.serviceId,
-      serviceName: data.serviceName,
-      servicePrice: data.servicePrice,
-      serviceDuration: data.serviceDuration,
-      clientName: data.clientName,
-      clientPhone: data.clientPhone,
-      date: data.date,
-      time: data.time,
-      paymentMethod: data.paymentMethod,
-      notes: data.notes ?? null,
-    status: APPOINTMENT_STATUS.CONFIRMED,
-      createdAt: new Date().toISOString(),
+      if (hasOverlap(data.date, data.time, data.serviceDuration, existingAppointments)) {
+        throw new AppointmentsError(
+          'Este horário acabou de ser reservado por outro cliente. Escolha outro horário.',
+          'SLOT_TAKEN'
+        )
+      }
+
+      const newDocRef = doc(collection(firestore, 'appointments'))
+      transaction.set(newDocRef, {
+        serviceId: data.serviceId,
+        serviceName: data.serviceName,
+        servicePrice: data.servicePrice,
+        serviceDuration: data.serviceDuration,
+        clientName: data.clientName,
+        clientPhone: data.clientPhone,
+        clientEmail: data.clientEmail ?? null,
+        date: data.date,
+        time: data.time,
+        startTime: data.time,
+        endTime,
+        paymentMethod: data.paymentMethod,
+        paymentStatus: 'pending',
+        notes: data.notes ?? null,
+        status: APPOINTMENT_STATUS.CONFIRMED,
+        createdAt: now,
+        updatedAt: now,
+      })
+
+      return newDocRef
     })
 
     const days = ['domingo', 'segunda-feira', 'terca-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sabado']
@@ -197,12 +222,26 @@ export async function createAppointment(
       time: data.time,
     }).catch(() => {})
 
-    return { ...appointment, id: docRef.id }
+    return {
+      ...data,
+      id: docRef.id,
+      startTime: data.time,
+      endTime,
+      paymentStatus: 'pending',
+      status: APPOINTMENT_STATUS.CONFIRMED,
+      createdAt: now,
+      updatedAt: now,
+    }
   } catch (err) {
+    const appointmentsErr = err as AppointmentsError
+    if (appointmentsErr?.code === 'SLOT_TAKEN') {
+      throw appointmentsErr
+    }
+
     const firestoreErr = err as FirestoreError
     if (firestoreErr?.code === 'permission-denied') {
       throw new AppointmentsError(
-        'Erro de permissao ao salvar. Verifique as regras do Firestore.',
+        'Erro de permissão ao salvar. Verifique as regras do Firestore.',
         'permission-denied'
       )
     }
@@ -302,7 +341,11 @@ export async function updateAppointmentStatus(
   }
 
   try {
-    await updateDoc(doc(db, 'appointments', id), { status })
+    const updateData: Record<string, unknown> = { status, updatedAt: new Date().toISOString() }
+    if (status === APPOINTMENT_STATUS.COMPLETED) {
+      updateData.paymentStatus = 'paid'
+    }
+    await updateDoc(doc(db, 'appointments', id), updateData)
 
     if (notifConfig && appointmentData) {
       createNotification({
@@ -339,18 +382,17 @@ export async function rescheduleAppointment(
   appointmentData?: { clientName: string; clientPhone: string; serviceName: string; date: string; time: string; serviceDuration?: number }
 ): Promise<void> {
   const duration = appointmentData?.serviceDuration ?? 60
-  const availability = await checkSlotAvailability(newDate, newTime, duration)
-  if (!availability.available && availability.existingId !== id) {
-    throw new AppointmentsError(
-      'Este horario acabou de ser reservado. Por favor, escolha outro horario.',
-      'SLOT_TAKEN'
-    )
-  }
 
   if (!firebaseReady || !db) {
     const all = getLocalAppointments()
     const idx = all.findIndex((a) => a.id === id)
     if (idx !== -1) {
+      if (hasOverlap(newDate, newTime, duration, all.filter((a) => a.id !== id))) {
+        throw new AppointmentsError(
+          'Este horário acabou de ser reservado por outro cliente. Escolha outro horário.',
+          'SLOT_TAKEN'
+        )
+      }
       all[idx].date = newDate
       all[idx].time = newTime
       saveLocalAppointments(all)
@@ -371,7 +413,33 @@ export async function rescheduleAppointment(
   }
 
   try {
-    await updateDoc(doc(db, 'appointments', id), { date: newDate, time: newTime })
+    const firestore = db!
+    await runTransaction(firestore, async (transaction) => {
+      const q = query(
+        collection(firestore, 'appointments'),
+        where('date', '==', newDate),
+        orderBy('time', 'asc')
+      )
+      const snapshot = await getDocs(q)
+      const existingAppointments = snapshot.docs
+        .map((d) => mapApptDoc(d, d.id))
+        .filter((a) => a.id !== id)
+
+      if (hasOverlap(newDate, newTime, duration, existingAppointments)) {
+        throw new AppointmentsError(
+          'Este horário acabou de ser reservado por outro cliente. Escolha outro horário.',
+          'SLOT_TAKEN'
+        )
+      }
+
+      transaction.update(doc(firestore, 'appointments', id), {
+        date: newDate,
+        time: newTime,
+        startTime: newTime,
+        endTime: computeEndTime(newTime, duration),
+        updatedAt: new Date().toISOString(),
+      })
+    })
 
     createNotification({
       type: 'rescheduled',
@@ -384,7 +452,12 @@ export async function rescheduleAppointment(
       date: newDate,
       time: newTime,
     }).catch(() => {})
-  } catch {
+  } catch (err) {
+    const appointmentsErr = err as AppointmentsError
+    if (appointmentsErr?.code === 'SLOT_TAKEN') {
+      throw appointmentsErr
+    }
+
     const all = getLocalAppointments()
     const idx = all.findIndex((a) => a.id === id)
     if (idx !== -1) {
@@ -412,7 +485,15 @@ export async function moveAppointment(
   }
 
   try {
-    await updateDoc(doc(db, 'appointments', id), { date: newDate, time: newTime })
+    const apt = (await getDocs(query(collection(db, 'appointments'), where('__name__', '==', id)))).docs[0]
+    const duration = apt?.data()?.serviceDuration ?? 60
+    await updateDoc(doc(db, 'appointments', id), {
+      date: newDate,
+      time: newTime,
+      startTime: newTime,
+      endTime: computeEndTime(newTime, duration),
+      updatedAt: new Date().toISOString(),
+    })
   } catch {
     const all = getLocalAppointments()
     const idx = all.findIndex((a) => a.id === id)
@@ -426,16 +507,28 @@ export async function moveAppointment(
 
 export async function deleteAppointment(id: string): Promise<void> {
   if (!firebaseReady || !db) {
-    const all = getLocalAppointments().filter((a) => a.id !== id)
-    saveLocalAppointments(all)
+    const all = getLocalAppointments()
+    const idx = all.findIndex((a) => a.id === id)
+    if (idx !== -1) {
+      all[idx].status = APPOINTMENT_STATUS.DELETED
+      all[idx].updatedAt = new Date().toISOString()
+      saveLocalAppointments(all)
+    }
     return
   }
 
   try {
-    const { deleteDoc } = await import('firebase/firestore')
-    await deleteDoc(doc(db, 'appointments', id))
+    await updateDoc(doc(db, 'appointments', id), {
+      status: APPOINTMENT_STATUS.DELETED,
+      updatedAt: new Date().toISOString(),
+    })
   } catch {
-    const all = getLocalAppointments().filter((a) => a.id !== id)
-    saveLocalAppointments(all)
+    const all = getLocalAppointments()
+    const idx = all.findIndex((a) => a.id === id)
+    if (idx !== -1) {
+      all[idx].status = APPOINTMENT_STATUS.DELETED
+      all[idx].updatedAt = new Date().toISOString()
+      saveLocalAppointments(all)
+    }
   }
 }
