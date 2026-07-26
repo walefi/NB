@@ -16,7 +16,7 @@ service cloud.firestore {
         'clientName', 'clientPhone', 'paymentMethod',
         'date', 'time', 'status', 'createdAt'
       ])
-      && request.resource.data.status == 'pending';
+      && request.resource.data.status == 'confirmed';
 
       allow read, update, delete: if request.auth != null;
     }
