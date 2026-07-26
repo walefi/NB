@@ -14,6 +14,42 @@ import { db, firebaseReady } from './config'
 import { createNotification } from './notifications'
 import type { Appointment, AppointmentStatus } from '@/types'
 
+function timeToMinutes(time: string): number {
+  const [h, m] = time.split(':').map(Number)
+  return h * 60 + m
+}
+
+function hasOverlap(
+  date: string,
+  time: string,
+  serviceDuration: number,
+  appointments: Appointment[]
+): boolean {
+  const newStart = timeToMinutes(time)
+  const newEnd = newStart + serviceDuration
+  return appointments.some((a) => {
+    if (a.date !== date || a.status === 'cancelled') return false
+    const aStart = timeToMinutes(a.time)
+    const aEnd = aStart + a.serviceDuration
+    return newStart < aEnd && newEnd > aStart
+  })
+}
+
+async function fetchAppointmentsForDate(date: string): Promise<Appointment[]> {
+  if (!firebaseReady || !db) return []
+  try {
+    const q = query(
+      collection(db, 'appointments'),
+      where('date', '==', date),
+      orderBy('time', 'asc')
+    )
+    const snapshot = await getDocs(q)
+    return snapshot.docs.map((d) => mapApptDoc(d, d.id))
+  } catch {
+    return []
+  }
+}
+
 const STORAGE_KEY = 'nb_appointments'
 
 export class AppointmentsError extends Error {
@@ -60,49 +96,23 @@ function mapApptDoc(doc: DocumentData, id: string): Appointment {
 
 export async function checkSlotAvailability(
   date: string,
-  time: string
+  time: string,
+  serviceDuration: number = 60
 ): Promise<{ available: boolean; existingId?: string }> {
-  if (!firebaseReady || !db) {
-    const all = getLocalAppointments()
-    const conflict = all.find(
-      (a) => a.date === date && a.time === time && a.status !== 'cancelled'
-    )
-    return conflict
-      ? { available: false, existingId: conflict.id }
-      : { available: true }
-  }
-
-  try {
-    const q = query(
-      collection(db, 'appointments'),
-      where('date', '==', date),
-      where('time', '==', time),
-      where('status', '!=', 'cancelled')
-    )
-    const snapshot = await getDocs(q)
-    if (!snapshot.empty) {
-      return { available: false, existingId: snapshot.docs[0].id }
-    }
-    return { available: true }
-  } catch {
-    const all = getLocalAppointments()
-    const conflict = all.find(
-      (a) => a.date === date && a.time === time && a.status !== 'cancelled'
-    )
-    return conflict
-      ? { available: false, existingId: conflict.id }
-      : { available: true }
-  }
+  const all = await fetchAppointmentsForDate(date)
+  const conflict = all.find((a) => hasOverlap(date, time, serviceDuration, [a]))
+  if (conflict) return { available: false, existingId: conflict.id }
+  return { available: true }
 }
 
 export async function createAppointment(
   data: Omit<Appointment, 'id' | 'status' | 'createdAt'>
 ): Promise<Appointment> {
-  const availability = await checkSlotAvailability(data.date, data.time)
+  const availability = await checkSlotAvailability(data.date, data.time, data.serviceDuration)
   if (!availability.available) {
     throw new AppointmentsError(
-      'Este horario ja esta reservado. Por favor, escolha outro horario.',
-      'slot-unavailable'
+      'Este horario acabou de ser reservado. Por favor, escolha outro horario.',
+      'SLOT_TAKEN'
     )
   }
 
@@ -115,14 +125,10 @@ export async function createAppointment(
 
   if (!firebaseReady || !db) {
     const all = getLocalAppointments()
-    // double-check locally
-    const localConflict = all.find(
-      (a) => a.date === data.date && a.time === data.time && a.status !== 'cancelled'
-    )
-    if (localConflict) {
+    if (hasOverlap(data.date, data.time, data.serviceDuration, all)) {
       throw new AppointmentsError(
-        'Este horario ja esta reservado. Por favor, escolha outro horario.',
-        'slot-unavailable'
+        'Este horario acabou de ser reservado. Por favor, escolha outro horario.',
+        'SLOT_TAKEN'
       )
     }
     all.push(appointment)
@@ -320,8 +326,17 @@ export async function rescheduleAppointment(
   id: string,
   newDate: string,
   newTime: string,
-  appointmentData?: { clientName: string; clientPhone: string; serviceName: string; date: string; time: string }
+  appointmentData?: { clientName: string; clientPhone: string; serviceName: string; date: string; time: string; serviceDuration?: number }
 ): Promise<void> {
+  const duration = appointmentData?.serviceDuration ?? 60
+  const availability = await checkSlotAvailability(newDate, newTime, duration)
+  if (!availability.available && availability.existingId !== id) {
+    throw new AppointmentsError(
+      'Este horario acabou de ser reservado. Por favor, escolha outro horario.',
+      'SLOT_TAKEN'
+    )
+  }
+
   if (!firebaseReady || !db) {
     const all = getLocalAppointments()
     const idx = all.findIndex((a) => a.id === id)

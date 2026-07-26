@@ -12,7 +12,7 @@ import { ClientForm } from '@/components/booking/ClientForm'
 import { PaymentSelector } from '@/components/booking/PaymentSelector'
 import { BookingReview } from '@/components/booking/BookingReview'
 import { useServices } from '@/hooks/useServices'
-import { useAppointments } from '@/hooks/useAppointments'
+import { useAvailableSlots } from '@/hooks/useAvailableSlots'
 import { createAppointment, AppointmentsError } from '@/lib/firebase/appointments'
 import { formatBookingDate } from '@/lib/utils'
 import { formatDuration, formatPrice, PAYMENT_LABELS } from '@/constants'
@@ -47,10 +47,10 @@ export function PublicBooking({ theme, onToggleTheme }: PublicBookingProps) {
 
   const service = services.find((s) => s.id === selectedServiceId) ?? null
 
-  const { appointments } = useAppointments(selectedDate || undefined)
-  const existingTimes = selectedDate
-    ? appointments.filter((a) => a.status !== 'cancelled').map((a) => a.time)
-    : []
+  const { availableSlots, loading: slotsLoading } = useAvailableSlots(
+    selectedDate || null,
+    service?.duration ?? 60
+  )
 
   const scrollToBooking = () => {
     document.getElementById('booking-section')?.scrollIntoView({ behavior: 'smooth' })
@@ -149,7 +149,12 @@ export function PublicBooking({ theme, onToggleTheme }: PublicBookingProps) {
         replace: true,
       })
     } catch (err) {
-      if (err instanceof AppointmentsError) {
+      if (err instanceof AppointmentsError && err.code === 'SLOT_TAKEN') {
+        setConfirmError('Este horário acabou de ser reservado. Escolha outro horário.')
+        setSelectedTime('')
+        setStep(3)
+        scrollToStep()
+      } else if (err instanceof AppointmentsError) {
         setConfirmError(err.message)
       } else {
         setConfirmError('Erro ao salvar agendamento. Tente novamente.')
@@ -274,7 +279,9 @@ export function PublicBooking({ theme, onToggleTheme }: PublicBookingProps) {
               selectedTime={selectedTime}
               onSelect={setSelectedTime}
               selectedDate={selectedDate}
-              existingTimes={existingTimes}
+              availableSlots={availableSlots}
+              loading={slotsLoading}
+              serviceDuration={service?.duration ?? 60}
             />
             <div className="flex justify-between mt-6">
               <Button variant="outline" onClick={prevStep}>Voltar</Button>

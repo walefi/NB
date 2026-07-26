@@ -73,6 +73,7 @@ export const RescheduleModal = memo(function RescheduleModal({
         serviceName: appointment.serviceName,
         date: appointment.date,
         time: appointment.time,
+        serviceDuration: appointment.serviceDuration,
       })
       onRescheduled()
     } catch (err) {

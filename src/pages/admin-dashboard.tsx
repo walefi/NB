@@ -30,8 +30,7 @@ export function AdminDashboard({ theme, onToggleTheme }: AdminDashboardProps) {
   useScrollToTop()
 
   const navigate = useNavigate()
-  const { logout, currentUser } = useAuth()
-  const uid = currentUser?.uid
+  const { logout } = useAuth()
   const [dateFilter, setDateFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState<AppointmentStatus | 'all'>('all')
   const [searchQuery, setSearchQuery] = useState('')
