@@ -1,15 +1,10 @@
 import type { Appointment } from '@/types'
 
-const PHONE_NUMBER_REGEX = /\D/g
-
-function cleanPhone(phone: string): string {
-  return phone.replace(PHONE_NUMBER_REGEX, '')
-}
-
-function buildWaUrl(phone: string, text: string): string {
-  const cleaned = cleanPhone(phone)
-  const encoded = encodeURIComponent(text)
-  return `https://wa.me/${cleaned}?text=${encoded}`
+export function normalizePhone(phone: string): string {
+  const digits = phone.replace(/\D/g, '')
+  if (digits.startsWith('55') && digits.length >= 12) return digits
+  if (digits.length >= 10) return `55${digits}`
+  return digits
 }
 
 function formatDate(dateStr: string): string {
@@ -20,76 +15,40 @@ function formatDate(dateStr: string): string {
   return `${days[date.getDay()]}, ${day} de ${months[date.getMonth()]}`
 }
 
+export function buildWhatsAppUrl(phone: string, message: string): string {
+  const normalized = normalizePhone(phone)
+  const encoded = encodeURIComponent(message)
+  return `https://wa.me/${normalized}?text=${encoded}`
+}
+
+export function buildAppointmentMessage(apt: Appointment): string {
+  return `Ola, ${apt.clientName}.\nRecebemos seu agendamento:\n\nServico: ${apt.serviceName}\nData: ${formatDate(apt.date)}\nHorario: ${apt.time}\n\nAguardo confirmacao.`
+}
+
 export const whatsappTemplates = {
   confirmation(apt: Appointment): string {
-    const text = `Ola, ${apt.clientName}! 
-
-Seu agendamento foi confirmado:
-
-Servico: ${apt.serviceName}
-Data: ${formatDate(apt.date)}
-Horario: ${apt.time}
-
-Aguardamos voce! 
-NB Nail`
-    return buildWaUrl(apt.clientPhone, text)
+    const text = `Ola, ${apt.clientName}!\n\nSeu agendamento foi confirmado:\n\nServico: ${apt.serviceName}\nData: ${formatDate(apt.date)}\nHorario: ${apt.time}\n\nAguardamos voce!\nNB Nail`
+    return buildWhatsAppUrl(apt.clientPhone, text)
   },
 
   cancellation(apt: Appointment): string {
-    const text = `Ola, ${apt.clientName}! 
-
-Seu agendamento foi cancelado:
-
-Servico: ${apt.serviceName}
-Data: ${formatDate(apt.date)}
-Horario: ${apt.time}
-
-Se precisar reagendar, entre em contato.
-NB Nail`
-    return buildWaUrl(apt.clientPhone, text)
+    const text = `Ola, ${apt.clientName}!\n\nSeu agendamento foi cancelado:\n\nServico: ${apt.serviceName}\nData: ${formatDate(apt.date)}\nHorario: ${apt.time}\n\nSe precisar reagendar, entre em contato.\nNB Nail`
+    return buildWhatsAppUrl(apt.clientPhone, text)
   },
 
   reschedule(apt: Appointment): string {
-    const text = `Ola, ${apt.clientName}! 
-
-Seu agendamento foi reagendado:
-
-Servico: ${apt.serviceName}
-Nova data: ${formatDate(apt.date)}
-Novo horario: ${apt.time}
-
-Aguardamos voce!
-NB Nail`
-    return buildWaUrl(apt.clientPhone, text)
+    const text = `Ola, ${apt.clientName}!\n\nSeu agendamento foi reagendado:\n\nServico: ${apt.serviceName}\nNova data: ${formatDate(apt.date)}\nNovo horario: ${apt.time}\n\nAguardamos voce!\nNB Nail`
+    return buildWhatsAppUrl(apt.clientPhone, text)
   },
 
   reminder(apt: Appointment): string {
-    const text = `Ola, ${apt.clientName}! 
-
-Lembrete do seu agendamento amanha:
-
-Servico: ${apt.serviceName}
-Data: ${formatDate(apt.date)}
-Horario: ${apt.time}
-
-Aguardamos voce!
-NB Nail`
-    return buildWaUrl(apt.clientPhone, text)
+    const text = `Ola, ${apt.clientName}!\n\nLembrete do seu agendamento amanha:\n\nServico: ${apt.serviceName}\nData: ${formatDate(apt.date)}\nHorario: ${apt.time}\n\nAguardamos voce!\nNB Nail`
+    return buildWhatsAppUrl(apt.clientPhone, text)
   },
 
   postService(apt: Appointment): string {
-    const text = `Ola, ${apt.clientName}! 
-
-Obrigada por escolher a NB Nail! 
-
-Servico realizado: ${apt.serviceName}
-Data: ${formatDate(apt.date)}
-
-Ficamos felizes em atende-lo(a)!
-Aguardamos voce na proxima visita. 
-
-NB Nail`
-    return buildWaUrl(apt.clientPhone, text)
+    const text = `Ola, ${apt.clientName}!\n\nObrigada por escolher a NB Nail!\n\nServico realizado: ${apt.serviceName}\nData: ${formatDate(apt.date)}\n\nFicamos felizes em atende-lo(a)!\nAguardamos voce na proxima visita.\n\nNB Nail`
+    return buildWhatsAppUrl(apt.clientPhone, text)
   },
 }
 

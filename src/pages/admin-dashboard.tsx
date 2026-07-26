@@ -13,6 +13,7 @@ import { useAppointmentsAdmin } from '@/hooks/admin/useAppointmentsAdmin'
 import { useNotifications } from '@/hooks/admin/useNotifications'
 import { updateAppointmentStatus } from '@/lib/firebase/appointments'
 import { useAuth } from '@/contexts/AuthContext'
+import { useScrollToTop } from '@/hooks/useScrollToTop'
 import type { ThemeMode, Appointment, AppointmentStatus } from '@/types'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -23,6 +24,7 @@ interface AdminDashboardProps {
 }
 
 export function AdminDashboard({ theme, onToggleTheme }: AdminDashboardProps) {
+  useScrollToTop()
   const navigate = useNavigate()
   const { logout } = useAuth()
   const [dateFilter, setDateFilter] = useState('')

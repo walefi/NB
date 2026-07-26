@@ -5,6 +5,7 @@ import { AdminSidebar } from '@/components/admin/layout/AdminSidebar'
 import { AdminHeader } from '@/components/admin/layout/AdminHeader'
 import { useBusinessSettings } from '@/hooks/admin/useBusinessSettings'
 import { useAuth } from '@/contexts/AuthContext'
+import { useScrollToTop } from '@/hooks/useScrollToTop'
 import type { ThemeMode } from '@/types'
 
 const StudioInfoForm = lazy(() =>
@@ -53,6 +54,7 @@ const TABS = [
 ] as const
 
 export function AdminSettings({ theme, onToggleTheme }: AdminSettingsProps) {
+  useScrollToTop()
   const [activeTab, setActiveTab] = useState<string>('info')
   const { settings, loading, saving, save } = useBusinessSettings()
   const navigate = useNavigate()

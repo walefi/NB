@@ -165,7 +165,10 @@ export function getWeekDates(dateStr: string): string[] {
   for (let i = 0; i < 7; i++) {
     const dd = new Date(monday)
     dd.setDate(monday.getDate() + i)
-    dates.push(dd.toISOString().split('T')[0])
+    const year = dd.getFullYear()
+    const month = String(dd.getMonth() + 1).padStart(2, '0')
+    const dayStr = String(dd.getDate()).padStart(2, '0')
+    dates.push(`${year}-${month}-${dayStr}`)
   }
   return dates
 }
@@ -183,7 +186,10 @@ export function getMonthDates(year: number, month: number): string[] {
   for (let i = 0; i < totalCells; i++) {
     const dd = new Date(paddedStart)
     dd.setDate(paddedStart.getDate() + i)
-    dates.push(dd.toISOString().split('T')[0])
+    const y = dd.getFullYear()
+    const m = String(dd.getMonth() + 1).padStart(2, '0')
+    const d = String(dd.getDate()).padStart(2, '0')
+    dates.push(`${y}-${m}-${d}`)
   }
   return dates
 }
@@ -193,17 +199,24 @@ export function isSameDay(a: string, b: string): boolean {
 }
 
 export function isToday(date: string): boolean {
-  return date === new Date().toISOString().split('T')[0]
+  return date === getToday()
 }
 
 export function getToday(): string {
-  return new Date().toISOString().split('T')[0]
+  const d = new Date()
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
 }
 
 export function getTomorrow(): string {
   const d = new Date()
   d.setDate(d.getDate() + 1)
-  return d.toISOString().split('T')[0]
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
 }
 
 export function getThisWeekStart(): string {
@@ -211,20 +224,29 @@ export function getThisWeekStart(): string {
   const day = d.getDay()
   const monday = new Date(d)
   monday.setDate(d.getDate() - ((day + 6) % 7))
-  return monday.toISOString().split('T')[0]
+  const year = monday.getFullYear()
+  const month = String(monday.getMonth() + 1).padStart(2, '0')
+  const dayStr = String(monday.getDate()).padStart(2, '0')
+  return `${year}-${month}-${dayStr}`
 }
 
 export function getThisWeekEnd(): string {
   const start = getThisWeekStart()
   const d = new Date(start + 'T12:00:00')
   d.setDate(d.getDate() + 6)
-  return d.toISOString().split('T')[0]
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
 }
 
 export function addDays(dateStr: string, days: number): string {
   const d = new Date(dateStr + 'T12:00:00')
   d.setDate(d.getDate() + days)
-  return d.toISOString().split('T')[0]
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
 }
 
 export function addWeeks(dateStr: string, weeks: number): string {

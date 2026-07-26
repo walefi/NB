@@ -6,6 +6,7 @@ import { DesktopHeader } from '@/components/admin/layout/DesktopHeader'
 import { Button } from '@/components/ui/Button'
 import { useNotifications } from '@/hooks/admin/useNotifications'
 import { useAuth } from '@/contexts/AuthContext'
+import { useScrollToTop } from '@/hooks/useScrollToTop'
 import type { ThemeMode, NotificationType } from '@/types'
 
 interface AdminNotificationsProps {
@@ -54,6 +55,7 @@ function formatTimeAgo(dateStr: string): string {
 }
 
 export function AdminNotifications({ theme, onToggleTheme }: AdminNotificationsProps) {
+  useScrollToTop()
   const navigate = useNavigate()
   const { logout } = useAuth()
   const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification } = useNotifications()

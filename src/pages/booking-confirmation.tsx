@@ -1,9 +1,11 @@
 import { useLocation, useNavigate } from 'react-router-dom'
-import { CheckCircle2, ArrowLeft } from 'lucide-react'
+import { CheckCircle2, ArrowLeft, MessageCircle } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Header } from '@/components/shared/Header'
 import { Card } from '@/components/ui/Card'
 import { formatBookingDate, formatPrice } from '@/lib/utils'
+import { buildWhatsAppUrl } from '@/lib/admin/whatsapp'
+import { useBusinessSettings } from '@/hooks/admin/useBusinessSettings'
 import type { Appointment, ThemeMode } from '@/types'
 import { STATUS_LABELS } from '@/constants'
 
@@ -12,9 +14,18 @@ interface BookingConfirmationProps {
   onToggleTheme: () => void
 }
 
+function formatDate(dateStr: string): string {
+  const [year, month, day] = dateStr.split('-').map(Number)
+  const date = new Date(year, month - 1, day)
+  const days = ['domingo', 'segunda-feira', 'terca-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sabado']
+  const months = ['janeiro', 'fevereiro', 'marco', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro']
+  return `${days[date.getDay()]}, ${day} de ${months[date.getMonth()]}`
+}
+
 export function BookingConfirmation({ theme, onToggleTheme }: BookingConfirmationProps) {
   const location = useLocation()
   const navigate = useNavigate()
+  const { settings } = useBusinessSettings()
   const appointment = location.state?.appointment as Appointment | undefined
 
   if (!appointment) {
@@ -26,16 +37,22 @@ export function BookingConfirmation({ theme, onToggleTheme }: BookingConfirmatio
             Nenhum agendamento encontrado
           </h1>
           <p className="text-black/60 dark:text-white/60 mb-8">
-            Volte para a página inicial e faça seu agendamento.
+            Volte para a pagina inicial e faca seu agendamento.
           </p>
           <Button onClick={() => navigate('/')}>
             <ArrowLeft className="w-4 h-4" />
-            Voltar para página inicial
+            Voltar para pagina inicial
           </Button>
         </div>
       </div>
     )
   }
+
+  const salonPhone = settings?.whatsapp || settings?.phone || ''
+  const message = `Ola!\n\nAcabei de realizar um agendamento:\n\nNome: ${appointment.clientName}\nServico: ${appointment.serviceName}\nData: ${formatDate(appointment.date)}\nHorario: ${appointment.time}\n\nAguardo confirmacao.`
+  const whatsappUrl = salonPhone
+    ? buildWhatsAppUrl(salonPhone, message)
+    : `https://wa.me/55?text=${encodeURIComponent(message)}`
 
   return (
     <div className="min-h-screen bg-white dark:bg-black">
@@ -50,7 +67,7 @@ export function BookingConfirmation({ theme, onToggleTheme }: BookingConfirmatio
             Agendamento solicitado!
           </h1>
           <p className="text-black/60 dark:text-white/60 leading-relaxed">
-            Entraremos em contato pelo WhatsApp para confirmar seu horário.
+            Entraremos em contato pelo WhatsApp para confirmar seu horario.
           </p>
         </div>
 
@@ -63,7 +80,7 @@ export function BookingConfirmation({ theme, onToggleTheme }: BookingConfirmatio
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-black/60 dark:text-white/60">Serviço</span>
+              <span className="text-sm text-black/60 dark:text-white/60">Servico</span>
               <span className="font-medium text-black dark:text-white">{appointment.serviceName}</span>
             </div>
             <div className="flex justify-between items-center">
@@ -71,7 +88,7 @@ export function BookingConfirmation({ theme, onToggleTheme }: BookingConfirmatio
               <span className="font-medium text-black dark:text-white">{formatBookingDate(appointment.date)}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-black/60 dark:text-white/60">Horário</span>
+              <span className="text-sm text-black/60 dark:text-white/60">Horario</span>
               <span className="font-medium text-black dark:text-white">{appointment.time}</span>
             </div>
             <div className="flex justify-between items-center">
@@ -87,10 +104,22 @@ export function BookingConfirmation({ theme, onToggleTheme }: BookingConfirmatio
           </div>
         </Card>
 
+        <div className="mt-6 animate-fade-in stagger-2">
+          <a
+            href={whatsappUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-3 w-full py-4 rounded-2xl bg-green-500 hover:bg-green-600 text-white font-semibold text-lg transition-colors shadow-lg shadow-green-500/20"
+          >
+            <MessageCircle className="w-6 h-6" />
+            Enviar Agendamento pelo WhatsApp
+          </a>
+        </div>
+
         <div className="mt-8 text-center">
           <Button size="lg" onClick={() => navigate('/')}>
             <ArrowLeft className="w-4 h-4" />
-            Voltar para página inicial
+            Voltar para pagina inicial
           </Button>
         </div>
       </div>

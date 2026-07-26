@@ -58,9 +58,16 @@ export function PublicBooking({ theme, onToggleTheme }: PublicBookingProps) {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
+  const scrollToStep = () => {
+    setTimeout(() => {
+      document.getElementById('booking-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 50)
+  }
+
   const goToStep = useCallback((newStep: BookingStep) => {
     if (newStep < 7) {
       setStep(newStep)
+      scrollToStep()
     }
   }, [])
 
@@ -85,6 +92,7 @@ export function PublicBooking({ theme, onToggleTheme }: PublicBookingProps) {
     if (step < 7) {
       setStep((step + 1) as BookingStep)
       setConfirmError(null)
+      scrollToStep()
     }
   }, [step, selectedServiceId, selectedDate, selectedTime, clientName, clientPhone, paymentMethod])
 
@@ -92,6 +100,7 @@ export function PublicBooking({ theme, onToggleTheme }: PublicBookingProps) {
     if (step > 1 && step < 7) {
       setStep((step - 1) as BookingStep)
       setConfirmError(null)
+      scrollToStep()
     }
   }, [step])
 

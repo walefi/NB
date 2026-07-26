@@ -7,6 +7,7 @@ import { CalendarHeader } from '@/components/admin/calendar/CalendarHeader'
 import { useCalendar } from '@/hooks/admin/useCalendar'
 import { moveAppointment, deleteAppointment, updateAppointmentStatus } from '@/lib/firebase/appointments'
 import { useAuth } from '@/contexts/AuthContext'
+import { useScrollToTop } from '@/hooks/useScrollToTop'
 import { Button } from '@/components/ui/Button'
 import type { ThemeMode, Appointment, AppointmentStatus } from '@/types'
 
@@ -35,6 +36,7 @@ interface AdminCalendarProps {
 }
 
 export function AdminCalendar({ theme, onToggleTheme }: AdminCalendarProps) {
+  useScrollToTop()
   const navigate = useNavigate()
   const { logout } = useAuth()
   const {

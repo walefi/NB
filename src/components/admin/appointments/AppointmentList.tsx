@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { formatBookingDate, formatPrice } from '@/lib/utils'
 import { STATUS_LABELS, PAYMENT_LABELS } from '@/constants'
+import { buildWhatsAppUrl, buildAppointmentMessage } from '@/lib/admin/whatsapp'
 import type { Appointment, AppointmentStatus } from '@/types'
 
 interface AppointmentListProps {
@@ -35,12 +36,10 @@ function PhoneIcon({ className }: { className?: string }) {
   )
 }
 
-function openWhatsApp(apt: Appointment): void {
-  const phone = apt.clientPhone.replace(/\D/g, '')
-  const message = encodeURIComponent(
-    `Ola, ${apt.clientName}.\nRecebemos seu agendamento para ${formatBookingDate(apt.date)} as ${apt.time}.`
-  )
-  window.open(`https://wa.me/55${phone}?text=${message}`, '_blank', 'noopener,noreferrer')
+function openAppointmentWhatsApp(apt: Appointment): void {
+  const message = buildAppointmentMessage(apt)
+  const url = buildWhatsAppUrl(apt.clientPhone, message)
+  window.open(url, '_blank', 'noopener,noreferrer')
 }
 
 function copyAppointmentData(apt: Appointment): void {
@@ -180,7 +179,7 @@ export function AppointmentList({
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={(e) => { e.stopPropagation(); openWhatsApp(apt) }}
+                    onClick={(e) => { e.stopPropagation(); openAppointmentWhatsApp(apt) }}
                     className="flex items-center gap-1 text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20"
                   >
                     <MessageCircle className="w-3.5 h-3.5" />
