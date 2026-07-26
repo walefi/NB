@@ -27,9 +27,10 @@ service cloud.firestore {
       allow write: if request.auth != null;
     }
 
-    // Notifications: admin only
+    // Notifications: anyone can create (public booking triggers notifications), admin manages
     match /notifications/{notificationId} {
-      allow create, read, update, delete: if request.auth != null;
+      allow create: if true;
+      allow read, update, delete: if request.auth != null;
     }
 
     // Deny everything else
