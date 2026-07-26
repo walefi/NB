@@ -58,14 +58,16 @@ const DEFAULT_SETTINGS: Omit<BusinessSettings, 'id' | 'createdAt' | 'updatedAt'>
 }
 
 export async function getBusinessSettings(): Promise<BusinessSettings | null> {
-  if (!firebaseReady || !db) return null
+  if (!firebaseReady || !db) return { ...DEFAULT_SETTINGS, id: SETTINGS_DOC_ID, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
   try {
     const ref = doc(db, 'settings', SETTINGS_DOC_ID)
     const snap = await getDoc(ref)
-    if (!snap.exists()) return null
+    if (!snap.exists()) {
+      return { ...DEFAULT_SETTINGS, id: SETTINGS_DOC_ID, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
+    }
     return { id: snap.id, ...snap.data() } as BusinessSettings
   } catch {
-    return null
+    return { ...DEFAULT_SETTINGS, id: SETTINGS_DOC_ID, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
   }
 }
 
