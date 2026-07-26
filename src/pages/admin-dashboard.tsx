@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Bell } from 'lucide-react'
+import { getMessaging, getToken } from 'firebase/messaging'
+import { firebaseApp } from '@/lib/firebase/config'
+import { registerAdminToken } from '@/services/notification-service'
 import { AdminSidebar } from '@/components/admin/layout/AdminSidebar'
 import { AdminHeader } from '@/components/admin/layout/AdminHeader'
 import { DesktopHeader } from '@/components/admin/layout/DesktopHeader'
@@ -27,7 +30,8 @@ export function AdminDashboard({ theme, onToggleTheme }: AdminDashboardProps) {
   useScrollToTop()
 
   const navigate = useNavigate()
-  const { logout } = useAuth()
+  const { logout, currentUser } = useAuth()
+  const uid = currentUser?.uid
   const [dateFilter, setDateFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState<AppointmentStatus | 'all'>('all')
   const [searchQuery, setSearchQuery] = useState('')
@@ -107,6 +111,24 @@ export function AdminDashboard({ theme, onToggleTheme }: AdminDashboardProps) {
               <p className="text-sm text-black/50 dark:text-white/50 mt-1">
                 Gerencie seus agendamentos
               </p>
+              <Button onClick={async () => {
+                try {
+                  if (typeof Notification !== 'undefined' && Notification.permission !== 'granted') {
+                    await Notification.requestPermission()
+                  }
+                  const messaging = getMessaging(firebaseApp)
+                  const token = await getToken(messaging, { vapidKey: import.meta.env.VITE_FIREBASE_MESSAGING_VAPID_KEY })
+                  if (token && uid) {
+                    await registerAdminToken(token, { uid, device: navigator.userAgent, browser: navigator.userAgent })
+                    alert('Notificações ativadas com sucesso')
+                  }
+                } catch (e) {
+                  console.error('Erro ao registrar token', e)
+                  alert('Falha ao ativar notificações')
+                }
+              }} className="ml-4">
+                Ativar notificações
+              </Button>
             </div>
           </div>
 
