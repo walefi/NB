@@ -1,6 +1,6 @@
 # NB Nail Booking
 
-Sistema de agendamento para **NB Nath Bittencourt** — Nail Design.
+Sistema de agendamento para **NB Nath Bitencount** — Nail Design.
 
 ## Stack
 

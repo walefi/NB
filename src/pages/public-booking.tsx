@@ -480,7 +480,7 @@ export function PublicBooking({ theme, onToggleTheme }: PublicBookingProps) {
             <span className="font-serif font-bold text-rose dark:text-rose-light text-lg">NB</span>
           </div>
           <p className="text-sm text-rose/50 dark:text-rose-light/40">
-            Nath Bittencourt &copy; {new Date().getFullYear()} &mdash; Nail Design
+            Nath Bitencount &copy; {new Date().getFullYear()} &mdash; Nail Design
           </p>
         </div>
       </footer>

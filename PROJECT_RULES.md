@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Sistema exclusivo para **NB Nath Bittencourt**.  
+Sistema exclusivo para **NB Nath Bitencount**.  
 Agendamento de serviços de Nail Design.
 
 ## Regras fundamentais
