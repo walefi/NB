@@ -364,7 +364,7 @@ export function PublicBooking({ theme, onToggleTheme }: PublicBookingProps) {
             <h1 className="font-serif text-5xl sm:text-6xl lg:text-7xl font-bold text-black dark:text-white mb-6 animate-slide-up stagger-1 text-balance leading-[1.05]">
               NB Nath
               <br />
-              Bittencourt
+              Bitencount
             </h1>
 
             <p className="font-serif text-xl sm:text-2xl text-rose dark:text-rose-light italic mb-8 animate-slide-up stagger-2">
