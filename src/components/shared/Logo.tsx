@@ -20,7 +20,7 @@ export function Logo({ size = 'md' }: LogoProps) {
       </span>
       <div className="flex flex-col leading-tight">
         <span className={`${s.name} font-medium text-black dark:text-white tracking-wide`}>
-          NATH BITTENCOURT
+          NATH BITENCOUNT
         </span>
         {size !== 'sm' && (
           <span className="text-[10px] tracking-[0.2em] text-rose dark:text-rose-light/70 uppercase font-medium">
