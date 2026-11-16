@@ -55,11 +55,12 @@ Fluxo codificado em `src/pages/public-booking.tsx` — `renderStepContent()` swi
 ## FASE 4 — Teste de Duplicidade
 
 | Item | Status | Detalhe |
-|------|--------|---------|
-| `checkSlotAvailability()` | OK | Query Firestore por date+time+status!=cancelled |
+|-------|--------|---------|
+| `checkSlotAvailability()` | OK | Le a ocupacao do dia em `availability/{date}` |
 | Bloqueio com mensagem PT-BR | OK | `AppointmentsError` "Este horario ja esta reservado" |
-| Double-check local | OK | `createAppointment:116-126` verifica localStorage |
+| Double-check local | OK | `createAppointment` verifica localStorage no modo demo |
 | Firebase + localStorage | OK | Ambos os caminhos validam duplicidade |
+| Reserva atomica | OK | Dia inteiro em 1 documento -> transacao serializa o dia |
 
 ---
 
@@ -89,14 +90,20 @@ Snapshot do servico completo: nome, preco e duracao salvos no agendamento para p
 |-------|--------|---------|
 | Servicos — leitura publica ativos | OK | `resource.data.isActive == true` |
 | Servicos — escrita admin | OK | `request.auth != null` |
-| Agendamentos — criacao publica validada | OK | 12 campos requeridos + status=pending |
-| Agendamentos — leitura publica | CORRIGIDO | `allow read: if true` para verificacao de disponibilidade |
+| Agendamentos — criacao publica validada | OK | 11 campos requeridos + status=confirmed |
+| Agendamentos — leitura publica | **BLOQUEADA (correto)** | `appointments` tem nome/telefone do cliente; leitura so no admin |
+| Disponibilidade — leitura publica | OK | `availability/{date}` sem PII, alimenta `TimePicker` e o agendamento |
+| Disponibilidade — escrita publica | OK | Cria/adiciona **1** slot; nao pode remover nem alterar |
+| Disponibilidade — remocao de slot | admin | Cancelar/reagendar/excluir reconstroi o dia |
 | Agendamentos — edicao admin | OK | `request.auth != null` |
 | Agendamentos — exclusao admin | OK | `request.auth != null` |
 | Padrao — negado | OK | `allow read, write: if false` |
 | Nao usa `allow read, write: if true` global | OK | Regras granulares por colecao |
 
-**Correcao aplicada:** Regras anteriores bloqueavam leitura publica de appointments, impedindo `checkSlotAvailability` e `TimePicker`. Corrigido para `allow read: if true` com nota documentando que dados pessoais so sao expostos no dashboard administrativo (auth required).
+**Correcao aplicada (ver FASE 9):** a leitura publica de `appointments` foi
+trocada pela colecao `availability`, que expoe somente os horarios ocupados.
+Assim o cliente continua vendo os horarios livres sem que o nome e o telefone
+do cliente fiquem publicos.
 
 ---
 
@@ -126,7 +133,7 @@ Snapshot do servico completo: nome, preco e duracao salvos no agendamento para p
 | `npx tsc -b --noEmit` | 0 erros |
 | `npm run build` | Build OK |
 | `npm run lint` | 0 erros |
-| `npx vitest run` | Sem arquivos de teste (esperado) |
+| `npm run verify:rules` | 14/14 checks no emulador do Firestore |
 
 ---
 
@@ -144,6 +151,7 @@ appointments: date ASC, time ASC, status ASC
 
 ## Pendências
 
+- **Publicar as regras do Firestore**: `firebase deploy --only firestore:rules`
 - Criar indices compostos no Firebase Console
 - Popular colecao `services` com dados reais
 - Configurar Firebase Authentication (email/senha para admin)
@@ -153,3 +161,37 @@ appointments: date ASC, time ASC, status ASC
 ## Proxima etapa recomendada
 
 Criar projeto Firebase real, popular `services` com dados de producao, criar usuario admin no Firebase Auth, testar fluxo completo localmente, e preparar deploy.
+
+---
+
+## FASE 9 — Correcao do erro de permissao no agendamento
+
+### Status: CONCLUIDA
+
+**Sintoma:** ao clicar em "Confirmar agendamento" o cliente recebia
+"Erro de permissao ao salvar. Verifique as regras do Firestore."
+
+**Causa raiz:** o `createAppointment()` lia a colecao `appointments` dentro da
+transacao (`getDocs`) para checar conflito de horario, mas as regras exigem
+`request.auth != null` para leitura de `appointments`. O visitante do site
+nao esta autenticado (regra do projeto: cliente nao faz login), entao a LEITURA
+era negada antes mesmo de gravar. O `checkSlotAvailability()` sofria do mesmo
+erro, mas engolia a excecao e devolvia "horario livre" — por isso o problema
+so aparecia no botao de salvar.
+
+**Correcao:**
+- Nova colecao `availability` (1 documento por dia, somente horarios ocupados)
+  com leitura publica e escrita publica limitada a adicionar 1 slot.
+- `createAppointment()` le e grava `availability` na mesma transacao do
+  agendamento. Como o dia inteiro cabe em 1 documento, a transacao serializa os
+  agendamentos do dia e reserva dupla / sobreposta e rejeitada.
+- `useAvailableSlots()` passou a observar `availability/{date}` em tempo real.
+- Cancelar / reagendar / mover / excluir reconstroi o dia a partir de
+  `appointments` (`rebuildDaySlots`).
+- `syncAvailabilityFromAppointments()` preenche os horarios ja reservados
+  antes da colecao existir (roda sozinho no painel admin).
+
+**Verificacao:** `npm run verify:rules` — 14/14 checks no emulador do
+Firestore (agendamento anonimo funciona, reserva dupla e sobreposta sao
+rejeitadas, PII continua bloqueada para o anonimo, admin consegue liberar
+horarios).
