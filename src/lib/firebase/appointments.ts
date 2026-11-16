@@ -1,5 +1,6 @@
 import {
   collection,
+  getDoc,
   getDocs,
   query,
   where,
@@ -12,6 +13,15 @@ import {
 } from 'firebase/firestore'
 import { db, firebaseReady } from './config'
 import { createNotification } from './notifications'
+import {
+  ensureSlotsForBookings,
+  fetchDaySlots,
+  hasSlotConflict,
+  readDaySlots,
+  setDaySlots,
+  writeDaySlots,
+  type DaySlots,
+} from './availability'
 import { APPOINTMENT_STATUS, type AppointmentStatus } from '@/constants/appointment-status'
 import type { Appointment } from '@/types'
 
@@ -37,18 +47,46 @@ function hasOverlap(
   })
 }
 
-async function fetchAppointmentsForDate(date: string): Promise<Appointment[]> {
-  if (!firebaseReady || !db) return []
+async function fetchAppointmentInfo(
+  id: string
+): Promise<{ date: string; time: string; duration: number } | null> {
+  if (!firebaseReady || !db) return null
   try {
-    const q = query(
-      collection(db, 'appointments'),
-      where('date', '==', date),
-      orderBy('time', 'asc')
-    )
-    const snapshot = await getDocs(q)
-    return snapshot.docs.map((d) => mapApptDoc(d, d.id))
+    const snap = await getDoc(doc(db, 'appointments', id))
+    if (!snap.exists()) return null
+    const data = snap.data() ?? {}
+    const date = typeof data.date === 'string' ? data.date : ''
+    const time = typeof data.time === 'string' ? data.time : ''
+    if (!date || !time) return null
+    const duration = typeof data.serviceDuration === 'number' ? data.serviceDuration : 60
+    return { date, time, duration }
   } catch {
-    return []
+    return null
+  }
+}
+
+/**
+ * Rewrites the occupied slots of a day from the appointments themselves.
+ * Admin only. Used after cancel / reschedule / move / delete so the public
+ * calendar never shows a time as free while an appointment still holds it.
+ */
+async function rebuildDaySlots(date: string): Promise<void> {
+  if (!firebaseReady || !db) return
+  try {
+    const snapshot = await getDocs(
+      query(collection(db, 'appointments'), where('date', '==', date))
+    )
+    const slots: DaySlots = {}
+    for (const appointmentDoc of snapshot.docs) {
+      const appointment = mapApptDoc(appointmentDoc, appointmentDoc.id)
+      if (!appointment.date || !appointment.time) continue
+      if (freesTheSlot(appointment.status)) continue
+      const duration = appointment.serviceDuration || 60
+      slots[appointment.time] = Math.max(slots[appointment.time] ?? 0, duration)
+    }
+    await setDaySlots(date, slots)
+  } catch {
+    // A stale slot only blocks one time, it never breaks the booking flow.
   }
 }
 
@@ -114,9 +152,18 @@ export async function checkSlotAvailability(
   time: string,
   serviceDuration: number = 60
 ): Promise<{ available: boolean; existingId?: string }> {
-  const all = await fetchAppointmentsForDate(date)
-  const conflict = all.find((a) => hasOverlap(date, time, serviceDuration, [a]))
-  if (conflict) return { available: false, existingId: conflict.id }
+  if (!firebaseReady || !db) {
+    const all = getLocalAppointments()
+    const conflict = all.find((a) => hasOverlap(date, time, serviceDuration, [a]))
+    if (conflict) return { available: false, existingId: conflict.id }
+    return { available: true }
+  }
+
+  // Public read: the availability collection holds no client PII.
+  const slots = await fetchDaySlots(date)
+  if (hasSlotConflict(slots, time, serviceDuration)) {
+    return { available: false }
+  }
   return { available: true }
 }
 
@@ -166,15 +213,9 @@ export async function createAppointment(
     const now = new Date().toISOString()
     const endTime = computeEndTime(data.time, data.serviceDuration)
     const docRef = await runTransaction(firestore, async (transaction) => {
-      const q = query(
-        collection(firestore, 'appointments'),
-        where('date', '==', data.date),
-        orderBy('time', 'asc')
-      )
-      const snapshot = await getDocs(q)
-      const existingAppointments = snapshot.docs.map((d) => mapApptDoc(d, d.id))
+      const slots = await readDaySlots(transaction, data.date)
 
-      if (hasOverlap(data.date, data.time, data.serviceDuration, existingAppointments)) {
+      if (hasSlotConflict(slots, data.time, data.serviceDuration)) {
         throw new AppointmentsError(
           'Este horário acabou de ser reservado por outro cliente. Escolha outro horário.',
           'SLOT_TAKEN'
@@ -200,6 +241,11 @@ export async function createAppointment(
         status: APPOINTMENT_STATUS.CONFIRMED,
         createdAt: now,
         updatedAt: now,
+      })
+
+      writeDaySlots(transaction, data.date, {
+        ...slots,
+        [data.time]: data.serviceDuration,
       })
 
       return newDocRef
@@ -239,6 +285,12 @@ export async function createAppointment(
     }
 
     const firestoreErr = err as FirestoreError
+    if (firestoreErr?.code === 'aborted') {
+      throw new AppointmentsError(
+        'Este horário acabou de ser reservado por outro cliente. Escolha outro horário.',
+        'SLOT_TAKEN'
+      )
+    }
     if (firestoreErr?.code === 'permission-denied') {
       throw new AppointmentsError(
         'Erro de permissão ao salvar. Verifique as regras do Firestore.',
@@ -304,6 +356,16 @@ const STATUS_NOTIFICATIONS: Record<string, { title: string; message: (name: stri
   },
 }
 
+const SLOT_RELEASING_STATUSES: AppointmentStatus[] = [
+  APPOINTMENT_STATUS.CANCELLED,
+  APPOINTMENT_STATUS.NO_SHOW,
+  APPOINTMENT_STATUS.DELETED,
+]
+
+function freesTheSlot(status: AppointmentStatus): boolean {
+  return SLOT_RELEASING_STATUSES.includes(status)
+}
+
 export async function updateAppointmentStatus(
   id: string,
   status: AppointmentStatus,
@@ -346,6 +408,15 @@ export async function updateAppointmentStatus(
       updateData.paymentStatus = 'paid'
     }
     await updateDoc(doc(db, 'appointments', id), updateData)
+
+    if (freesTheSlot(status)) {
+      const slot = appointmentData?.date
+        ? { date: appointmentData.date }
+        : await fetchAppointmentInfo(id)
+      if (slot) {
+        await rebuildDaySlots(slot.date)
+      }
+    }
 
     if (notifConfig && appointmentData) {
       createNotification({
@@ -414,18 +485,17 @@ export async function rescheduleAppointment(
 
   try {
     const firestore = db!
-    await runTransaction(firestore, async (transaction) => {
-      const q = query(
-        collection(firestore, 'appointments'),
-        where('date', '==', newDate),
-        orderBy('time', 'asc')
-      )
-      const snapshot = await getDocs(q)
-      const existingAppointments = snapshot.docs
-        .map((d) => mapApptDoc(d, d.id))
-        .filter((a) => a.id !== id)
+    const previous = await fetchAppointmentInfo(id)
+    const duration = appointmentData?.serviceDuration ?? previous?.duration ?? 60
 
-      if (hasOverlap(newDate, newTime, duration, existingAppointments)) {
+    await runTransaction(firestore, async (transaction) => {
+      const slots = await readDaySlots(transaction, newDate)
+      const freeSlots = { ...slots }
+      if (previous && previous.date === newDate) {
+        delete freeSlots[previous.time]
+      }
+
+      if (hasSlotConflict(freeSlots, newTime, duration)) {
         throw new AppointmentsError(
           'Este horário acabou de ser reservado por outro cliente. Escolha outro horário.',
           'SLOT_TAKEN'
@@ -440,6 +510,13 @@ export async function rescheduleAppointment(
         updatedAt: new Date().toISOString(),
       })
     })
+
+    if (previous) {
+      await rebuildDaySlots(previous.date)
+      if (newDate !== previous.date) {
+        await rebuildDaySlots(newDate)
+      }
+    }
 
     createNotification({
       type: 'rescheduled',
@@ -485,8 +562,8 @@ export async function moveAppointment(
   }
 
   try {
-    const apt = (await getDocs(query(collection(db, 'appointments'), where('__name__', '==', id)))).docs[0]
-    const duration = apt?.data()?.serviceDuration ?? 60
+    const previous = await fetchAppointmentInfo(id)
+    const duration = previous?.duration ?? 60
     await updateDoc(doc(db, 'appointments', id), {
       date: newDate,
       time: newTime,
@@ -494,6 +571,12 @@ export async function moveAppointment(
       endTime: computeEndTime(newTime, duration),
       updatedAt: new Date().toISOString(),
     })
+    if (previous) {
+      await rebuildDaySlots(previous.date)
+      if (newDate !== previous.date) {
+        await rebuildDaySlots(newDate)
+      }
+    }
   } catch {
     const all = getLocalAppointments()
     const idx = all.findIndex((a) => a.id === id)
@@ -522,6 +605,10 @@ export async function deleteAppointment(id: string): Promise<void> {
       status: APPOINTMENT_STATUS.DELETED,
       updatedAt: new Date().toISOString(),
     })
+    const info = await fetchAppointmentInfo(id)
+    if (info) {
+      await rebuildDaySlots(info.date)
+    }
   } catch {
     const all = getLocalAppointments()
     const idx = all.findIndex((a) => a.id === id)
@@ -530,5 +617,29 @@ export async function deleteAppointment(id: string): Promise<void> {
       all[idx].updatedAt = new Date().toISOString()
       saveLocalAppointments(all)
     }
+  }
+}
+
+/**
+ * Admin only: makes the availability collection match the appointments that
+ * already exist. Needed once, right after the `availability` collection was
+ * introduced, so the times booked before that are not shown as free.
+ */
+let availabilitySynced = false
+
+export async function syncAvailabilityFromAppointments(): Promise<number> {
+  if (!firebaseReady || !db) return 0
+  if (availabilitySynced) return 0
+  try {
+    const snapshot = await getDocs(collection(db, 'appointments'))
+    const bookings = snapshot.docs
+      .map((d) => mapApptDoc(d, d.id))
+      .filter((a) => !freesTheSlot(a.status) && a.date && a.time)
+      .map((a) => ({ date: a.date, time: a.time, duration: a.serviceDuration || 60 }))
+    const created = await ensureSlotsForBookings(bookings)
+    availabilitySynced = true
+    return created
+  } catch {
+    return 0
   }
 }
