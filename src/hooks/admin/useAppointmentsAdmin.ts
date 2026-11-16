@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { collection, query, orderBy, onSnapshot, type DocumentData } from 'firebase/firestore'
 import { db, firebaseReady } from '@/lib/firebase/config'
+import { syncAvailabilityFromAppointments } from '@/lib/firebase/appointments'
 import { APPOINTMENT_STATUS, type AppointmentStatus } from '@/constants/appointment-status'
 import type { Appointment } from '@/types'
 
@@ -72,6 +73,10 @@ export function useAppointmentsAdmin({
     })
 
     return () => unsubscribe()
+  }, [])
+
+  useEffect(() => {
+    syncAvailabilityFromAppointments().catch(() => {})
   }, [])
 
   const filteredAppointments = useMemo(() => {
