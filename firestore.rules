@@ -4,26 +4,51 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // Services: public read (active only), admin write
-    
-match /appointments/{appointmentId} {
-  allow create: if request.resource.data.keys().hasAll([
-    'serviceId',
-    'serviceName',
-    'servicePrice',
-    'serviceDuration',
-    'clientName',
-    'clientPhone',
-    'paymentMethod',
-    'date',
-    'time',
-    'status',
-    'createdAt'
-  ])
-  && request.resource.data.status == 'confirmed';
+    match /services/{serviceId} {
+      allow read: if resource.data.isActive == true;
+      allow write: if request.auth != null;
+    }
 
-  allow read, update, delete: if request.auth != null;
-}
+    // Appointments: create with valid fields (public booking), admin read/write
+    match /appointments/{appointmentId} {
+      allow create: if request.resource.data.keys().hasAll([
+        'serviceId', 'serviceName', 'servicePrice', 'serviceDuration',
+        'clientName', 'clientPhone', 'paymentMethod',
+        'date', 'time', 'status', 'createdAt'
+      ])
+      && request.resource.data.status == 'confirmed';
 
+      // Reading requires auth: the collection holds client PII (name, phone, e-mail).
+      // Public availability is served by /availability instead.
+      allow read, update, delete: if request.auth != null;
+    }
+
+    // Availability: one doc per day (doc id = YYYY-MM-DD) holding ONLY the
+    // occupied time slots. No client PII, so public read is safe.
+    //
+    // The public booking flow claims a slot by adding exactly one entry to
+    // "slots". Because the whole day lives in a single document, a Firestore
+    // transaction on that document serialises every booking for that day:
+    // two clients racing for the same slot make one transaction fail/retry,
+    // which is what prevents double booking.
+    match /availability/{dateId} {
+      allow read: if true;
+
+      // Public booking: create the day with a single slot.
+      allow create: if request.auth != null
+        || (isValidAvailability(request.resource.data, dateId)
+            && request.resource.data.slots.size() == 1);
+
+      // Public booking: append exactly one slot, never remove or change one.
+      // Admins may freely rewrite the day (cancel / reschedule / backfill).
+      allow update: if request.auth != null
+        || (isValidAvailability(request.resource.data, dateId)
+            && request.resource.data.slots.diff(resource.data.slots).removedKeys().size() == 0
+            && request.resource.data.slots.diff(resource.data.slots).affectedKeys().size() == 1
+            && request.resource.data.slots.size() == resource.data.slots.size() + 1);
+
+      allow delete: if request.auth != null;
+    }
 
     // Settings: public read, admin write
     match /settings/{settingId} {
@@ -41,5 +66,15 @@ match /appointments/{appointmentId} {
     match /{document=**} {
       allow read, write: if false;
     }
+  }
+
+  // Shape of a day-availability document. Keys: "time" -> duration in minutes.
+  function isValidAvailability(data, dateId) {
+    return dateId.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+      && data.keys().hasOnly(['date', 'slots', 'updatedAt'])
+      && data.date is string
+      && data.date == dateId
+      && data.slots is map
+      && data.updatedAt is string;
   }
 }
